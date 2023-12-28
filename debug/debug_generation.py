@@ -8,9 +8,16 @@ pretrained_dir = os.path.join(data_dir, 'pretrained')
 
 
 tokenizer = AutoTokenizer.from_pretrained(os.path.join(pretrained_dir, "THUDM", "glm-2b"), trust_remote_code=True)
+exit()
 model = AutoModelForSeq2SeqLM.from_pretrained(os.path.join(pretrained_dir, "THUDM", "glm-2b"), trust_remote_code=True)
 model = model.half().cuda()
 model.eval()
+
+def debug_glm():
+    """
+    """
+    
+    ...
 
 
 def debug_inference():
