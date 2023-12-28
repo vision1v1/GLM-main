@@ -9,6 +9,7 @@
             "path": "/root/data/pretrained/THUDM"
         },
         {
+            "name": "transformers_modules",
             "path": "/root/.cache/huggingface/modules/transformers_modules"
         }
     ],
