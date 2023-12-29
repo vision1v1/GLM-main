@@ -56,7 +56,7 @@
         "tasks": [
             {
                 "label": "print",
-                "command": "echo ${my_data_dir}", 
+                "command": "echo ${env:my_data_dir}", 
                 "type": "shell",
             }
         ]
