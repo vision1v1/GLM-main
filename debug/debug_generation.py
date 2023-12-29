@@ -6,27 +6,21 @@ pretrained_dir = os.path.join(data_dir, 'pretrained')
 # tokenizer = AutoTokenizer.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
 # model = AutoModelForSeq2SeqLM.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
 
-def debug_glm2b():
+
+def debug_glm(path):
     """
     """
-    tokenizer = AutoTokenizer.from_pretrained("THUDM/glm-2b", trust_remote_code=True)
-    model = AutoModelForSeq2SeqLM.from_pretrained("THUDM/glm-2b", trust_remote_code=True)
+    print("path = ", path)
+    tokenizer = AutoTokenizer.from_pretrained(path, trust_remote_code=True)
+    model = AutoModelForSeq2SeqLM.from_pretrained(path, trust_remote_code=True)
     model = model.half().cuda()
     model.eval()
     return tokenizer, model
 
-def debug_glm10b():
-    """
-    """
-    tokenizer = AutoTokenizer.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
-    model = AutoModelForSeq2SeqLM.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
-    model = model.half().cuda()
-    model.eval()
-    return tokenizer, model
-
-
-tokenizer, model = debug_glm2b()
-# tokenizer, model = debug_glm10b()
+# path = "THUDM/glm-2b"
+# path = "THUDM/glm-10b"
+path = os.path.join(pretrained_dir, "THUDM", "glm-2b")
+tokenizer, model = debug_glm(path)
 
 
 def debug_inference():
