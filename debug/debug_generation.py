@@ -6,18 +6,27 @@ pretrained_dir = os.path.join(data_dir, 'pretrained')
 # tokenizer = AutoTokenizer.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
 # model = AutoModelForSeq2SeqLM.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
 
-
-tokenizer = AutoTokenizer.from_pretrained(os.path.join(pretrained_dir, "THUDM", "glm-2b"), trust_remote_code=True)
-exit()
-model = AutoModelForSeq2SeqLM.from_pretrained(os.path.join(pretrained_dir, "THUDM", "glm-2b"), trust_remote_code=True)
-model = model.half().cuda()
-model.eval()
-
-def debug_glm():
+def debug_glm2b():
     """
     """
-    
-    ...
+    tokenizer = AutoTokenizer.from_pretrained("THUDM/glm-2b", trust_remote_code=True)
+    model = AutoModelForSeq2SeqLM.from_pretrained("THUDM/glm-2b", trust_remote_code=True)
+    model = model.half().cuda()
+    model.eval()
+    return tokenizer, model
+
+def debug_glm10b():
+    """
+    """
+    tokenizer = AutoTokenizer.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
+    model = AutoModelForSeq2SeqLM.from_pretrained("THUDM/glm-10b", trust_remote_code=True)
+    model = model.half().cuda()
+    model.eval()
+    return tokenizer, model
+
+
+tokenizer, model = debug_glm2b()
+# tokenizer, model = debug_glm10b()
 
 
 def debug_inference():
@@ -33,8 +42,8 @@ def debug_inference():
 
 def debug_training():
     # Training
-    train_data = "Tsinghua University is located in [MASK].", "One minus one equals zero, is it correct? Answer: [MASK]"
-    inputs = tokenizer([train_data], return_tensors="pt", padding=True)
+    train_data = ["Tsinghua University is located in [MASK].", "One minus one equals zero, is it correct? Answer: [MASK]"]
+    inputs = tokenizer(train_data, return_tensors="pt", padding=True)
     inputs = tokenizer.build_inputs_for_generation(inputs, targets=["Beijing", "No"], max_gen_length=8, padding=False)
     inputs = inputs.to('cuda')
     outputs = model(**inputs)
@@ -43,6 +52,6 @@ def debug_training():
 
 
 if __name__ == "__main__":
-    # debug_inference()
+    debug_inference()
     debug_training()
     ...
