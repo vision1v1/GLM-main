@@ -11,6 +11,10 @@
         {
             "name": "transformers_modules",
             "path": "C:/Users/Administrator/.cache/huggingface/modules/transformers_modules"
+        },
+        {
+            "name": "datasets_modules",
+            "path": "C:/Users/Administrator/.cache/huggingface/modules/datasets_modules"
         }
     ],
     "settings": {
