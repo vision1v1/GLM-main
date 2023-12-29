@@ -15,7 +15,11 @@
         {
             "name": "datasets_modules",
             "path": "C:/Users/Administrator/.cache/huggingface/modules/datasets_modules"
-        }
+        },
+        {
+            "name": "datasets_data",
+            "path": "C:/Users/Administrator/.cache/huggingface/datasets"
+        },
     ],
     "settings": {
         "workbench.colorCustomizations": {
