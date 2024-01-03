@@ -53,7 +53,13 @@
 				"type": "python",
 				"request": "launch",
 				"program": "${workspaceFolder:GLM-main}/pretrain_glm.py",
-				"env": {"skip_on_failure":"True"}
+				"env": {"skip_on_failure":"True"},
+                "args": [
+                    "--data-dir", "./debug_data",
+                    "--train-data", "train.txt",
+                    "--valid-data", "valid.txt",
+                    "--test-data", "test.txt"
+                ]
 			},
 			{
 				"name": "finetune_glm.py",
