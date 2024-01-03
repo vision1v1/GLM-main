@@ -80,26 +80,18 @@ def add_fp16_config_args(parser):
 
     group = parser.add_argument_group('fp16', 'fp16 configurations')
 
-    group.add_argument('--fp16', action='store_true',
-                       help='Run model in fp16 mode')
-    group.add_argument('--fp32-embedding', action='store_true',
-                       help='embedding in fp32')
-    group.add_argument('--fp32-layernorm', action='store_true',
-                       help='layer norm in fp32')
-    group.add_argument('--fp32-tokentypes', action='store_true',
-                       help='embedding token types in fp32')
-    group.add_argument('--fp32-allreduce', action='store_true',
-                       help='all-reduce in fp32')
-    group.add_argument('--hysteresis', type=int, default=2,
-                       help='hysteresis for dynamic loss scaling')
+    group.add_argument('--fp16', action='store_true', help='Run model in fp16 mode')
+    group.add_argument('--fp32-embedding', action='store_true', help='embedding in fp32')
+    group.add_argument('--fp32-layernorm', action='store_true', help='layer norm in fp32')
+    group.add_argument('--fp32-tokentypes', action='store_true', help='embedding token types in fp32')
+    group.add_argument('--fp32-allreduce', action='store_true', help='all-reduce in fp32')
+    group.add_argument('--hysteresis', type=int, default=2, help='hysteresis for dynamic loss scaling')
     group.add_argument('--loss-scale', type=float, default=None,
                        help='Static loss scaling, positive power of 2 '
                             'values can improve fp16 convergence. If None, dynamic'
                             'loss scaling is used.')
-    group.add_argument('--loss-scale-window', type=float, default=1000,
-                       help='Window over which to raise/lower dynamic scale')
-    group.add_argument('--min-scale', type=float, default=1,
-                       help='Minimum loss scale for dynamic loss scale')
+    group.add_argument('--loss-scale-window', type=float, default=1000, help='Window over which to raise/lower dynamic scale')
+    group.add_argument('--min-scale', type=float, default=1, help='Minimum loss scale for dynamic loss scale')
     group.add_argument('--attention-scale', type=float, default=1.0)
     return parser
 
@@ -109,73 +101,46 @@ def add_training_args(parser):
 
     group = parser.add_argument_group('train', 'training configurations')
 
-    group.add_argument('--experiment-name', type=str, default="glm",
-                       help="The experiment name for summary and checkpoint")
-    group.add_argument('--batch-size', type=int, default=4,
-                       help='Data Loader batch size')
-    group.add_argument('--gradient-accumulation-steps', type=int, default=1,
-                       help='Data Loader batch size')
-    group.add_argument('--weight-decay', type=float, default=0.01,
-                       help='weight decay coefficient for L2 regularization')
+    group.add_argument('--experiment-name', type=str, default="glm", help="The experiment name for summary and checkpoint")
+    group.add_argument('--batch-size', type=int, default=4, help='Data Loader batch size')
+    group.add_argument('--gradient-accumulation-steps', type=int, default=1, help='Data Loader batch size')
+    group.add_argument('--weight-decay', type=float, default=0.01, help='weight decay coefficient for L2 regularization')
     group.add_argument('--checkpoint-activations', action='store_true',
-                       help='checkpoint activation to allow for training '
-                            'with larger models and sequences')
-    group.add_argument('--checkpoint-num-layers', type=int, default=1,
-                       help='chunk size (number of layers) for checkpointing')
-    group.add_argument('--deepspeed-activation-checkpointing', action='store_true',
-                       help='uses activation checkpointing from deepspeed')
-    group.add_argument('--epochs', type=int, default=None,
-                       help='Number of finetuning epochs. Zero results in evaluation only.')
-    group.add_argument('--clip-grad', type=float, default=1.0,
-                       help='gradient clipping')
-    group.add_argument('--train-iters', type=int, default=0,
-                       help='total number of iterations to train over all training runs')
+                       help='checkpoint activation to allow for training with larger models and sequences')
+    group.add_argument('--checkpoint-num-layers', type=int, default=1, help='chunk size (number of layers) for checkpointing')
+    group.add_argument('--deepspeed-activation-checkpointing', action='store_true', help='uses activation checkpointing from deepspeed')
+    group.add_argument('--epochs', type=int, default=None, help='Number of finetuning epochs. Zero results in evaluation only.')
+    group.add_argument('--clip-grad', type=float, default=1.0, help='gradient clipping')
+    group.add_argument('--train-iters', type=int, default=0, help='total number of iterations to train over all training runs')
     group.add_argument('--label-smoothing', type=float, default=0.0)
-    group.add_argument('--log-interval', type=int, default=100,
-                       help='report interval')
+    group.add_argument('--log-interval', type=int, default=100, help='report interval')
     group.add_argument('--summary-dir', type=str, default="", help="The directory to store the summary")
     group.add_argument('--seed', type=int, default=1234, help='random seed')
     # Batch producer arguments
-    group.add_argument('--reset-position-ids', action='store_true',
-                       help='Reset position ids after end-of-document token.')
-    group.add_argument('--reset-attention-mask', action='store_true',
-                       help='Reset self attention masks after '
-                            'end-of-document token.')
+    group.add_argument('--reset-position-ids', action='store_true', help='Reset position ids after end-of-document token.')
+    group.add_argument('--reset-attention-mask', action='store_true', help='Reset self attention masks after end-of-document token.')
 
     # Learning rate.
     group.add_argument('--lr-decay-iters', type=int, default=None,
-                       help='number of iterations to decay LR over,'
-                            ' If None defaults to `--train-iters`*`--epochs`')
-    group.add_argument('--lr-decay-style', type=str, default='linear',
-                       choices=['constant', 'linear', 'cosine', 'exponential'],
+                       help='number of iterations to decay LR over, If None defaults to `--train-iters`*`--epochs`')
+    group.add_argument('--lr-decay-style', type=str, default='linear', choices=['constant', 'linear', 'cosine', 'exponential'],
                        help='learning rate decay function')
     group.add_argument('--lr-decay-ratio', type=float, default=0.1)
-    group.add_argument('--lr', type=float, default=1.0e-4,
-                       help='initial learning rate')
+    group.add_argument('--lr', type=float, default=1.0e-4, help='initial learning rate')
     group.add_argument('--warmup', type=float, default=0.01,
-                       help='percentage of data to warmup on (.01 = 1% of all '
-                            'training iters). Default 0.01')
+                       help='percentage of data to warmup on (.01 = 1% of all training iters). Default 0.01')
     group.add_argument('--switch-linear', action='store_true', help="Switch to linear decay for cosine decay")
     # model checkpointing
-    group.add_argument('--save', type=str, default=None,
-                       help='Output directory to save checkpoints to.')
+    group.add_argument('--save', type=str, default=None, help='Output directory to save checkpoints to.')
     group.add_argument('--new-save-directory', action='store_true')
-    group.add_argument('--save-epoch', type=int, default=1,
-                       help='number of epochs between saves')
-    group.add_argument('--save-interval', type=int, default=5000,
-                       help='number of iterations between saves')
-    group.add_argument('--no-save-optim', action='store_true',
-                       help='Do not save current optimizer.')
-    group.add_argument('--no-save-rng', action='store_true',
-                       help='Do not save current rng state.')
-    group.add_argument('--load', type=str, default=None,
-                       help='Path to a directory containing a model checkpoint.')
-    group.add_argument('--no-load-optim', action='store_true',
-                       help='Do not load optimizer when loading checkpoint.')
-    group.add_argument('--no-load-rng', action='store_true',
-                       help='Do not load rng state when loading checkpoint.')
-    group.add_argument('--no-load-lr-scheduler', action='store_true',
-                       help='Do not load lr scheduler when loading checkpoint.')
+    group.add_argument('--save-epoch', type=int, default=1, help='number of epochs between saves')
+    group.add_argument('--save-interval', type=int, default=5000, help='number of iterations between saves')
+    group.add_argument('--no-save-optim', action='store_true', help='Do not save current optimizer.')
+    group.add_argument('--no-save-rng', action='store_true', help='Do not save current rng state.')
+    group.add_argument('--load', type=str, default=None, help='Path to a directory containing a model checkpoint.')
+    group.add_argument('--no-load-optim', action='store_true', help='Do not load optimizer when loading checkpoint.')
+    group.add_argument('--no-load-rng', action='store_true', help='Do not load rng state when loading checkpoint.')
+    group.add_argument('--no-load-lr-scheduler', action='store_true', help='Do not load lr scheduler when loading checkpoint.')
     group.add_argument('--no-deepspeed-load', action='store_true', help='Not use deepspeed when loading checkpoint')
     group.add_argument('--finetune', action='store_true',
                        help='Load model for finetuning. Do not load optimizer '
@@ -186,14 +151,12 @@ def add_training_args(parser):
                             'Does not apply to tfrecords dataloader, try resuming'
                             'with a different seed in this case.')
     # distributed training args
-    group.add_argument('--distributed-backend', default='nccl',
-                       help='which backend to use for distributed training. One of [gloo, nccl]',
-                       choices=['nccl', 'gloo'])
+    group.add_argument('--distributed-backend', default='nccl', choices=['nccl', 'gloo'],
+                       help='which backend to use for distributed training. One of [gloo, nccl]')
     group.add_argument('--DDP-impl', default='torch', choices=['local', 'torch', 'none'],
                        help='which DistributedDataParallel implementation to use.')
 
-    group.add_argument('--local_rank', type=int, default=None,
-                       help='local rank passed from distributed launcher')
+    group.add_argument('--local_rank', type=int, default=None, help='local rank passed from distributed launcher')
     # BlockLM training args
     group.add_argument('--block-lm', action='store_true', help="whether use the BlockLM pre-training")
     group.add_argument('--masked-lm', action='store_true', help='whether to use the mlm objective')
@@ -207,14 +170,11 @@ def add_training_args(parser):
     group.add_argument('--single-span-prob', type=float, default=0.0)
     group.add_argument('--task-mask', action='store_true', help="Use different mask for generation and blank filling")
     group.add_argument('--no-shuffle-block', action='store_true', help="not shuffle the blocks when filling the blank")
-    group.add_argument('--no-block-position', action='store_true',
-                       help='Use (rough) absolute positions instead of block positions')
-    group.add_argument('--sentinel-token', action='store_true',
-                       help="Use sentinel (mask) tokens to replace 2d position encoding")
+    group.add_argument('--no-block-position', action='store_true', help='Use (rough) absolute positions instead of block positions')
+    group.add_argument('--sentinel-token', action='store_true', help="Use sentinel (mask) tokens to replace 2d position encoding")
     group.add_argument('--block-mask-prob', type=float, default=0.0)
     group.add_argument('--context-mask-ratio', type=float, default=0.0)
-    group.add_argument('--random-position', action='store_true',
-                       help="Use random start position to cover all the position embeddings")
+    group.add_argument('--random-position', action='store_true', help="Use random start position to cover all the position embeddings")
     return parser
 
 
@@ -271,17 +231,16 @@ def add_data_args(parser):
     group.add_argument('--shuffle', action='store_true',
                        help='Shuffle data. Shuffling is deterministic based on seed and current epoch.')
     group.add_argument('--filter-english', action='store_true')
-    
+
     group.add_argument('--train-data', nargs='+', default=None,
                        help='Whitespace separated filenames or corpora names for training.')
-    
+
     group.add_argument('--valid-data', nargs='*', default=None, help="""Filename for validation data.""")
-    
+
     group.add_argument('--test-data', nargs='*', default=None, help="""Filename for testing""")
-    
+
     group.add_argument('--data-dir', type=str, default=None, help="The data path to all the data files")
-    
-    
+
     group.add_argument('--input-data-sizes-file', type=str, default='sizes.txt',
                        help='the filename containing all the shards sizes')
 
