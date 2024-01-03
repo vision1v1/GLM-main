@@ -42,6 +42,13 @@
 				"program": "${workspaceFolder:GLM-main}/debug/debug_generation.py",
 			},
             {
+				"name": "generate_samples.py",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder:GLM-main}/generate_samples.py",
+				"env": {"skip_on_failure":"True"}
+			},
+            {
 				"name": "pretrain_glm.py",
 				"type": "python",
 				"request": "launch",
