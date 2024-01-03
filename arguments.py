@@ -267,47 +267,38 @@ def add_data_args(parser):
 
     group = parser.add_argument_group('data', 'data configurations')
 
-    group.add_argument('--model-parallel-size', type=int, default=1,
-                       help='size of the model parallel.')
+    group.add_argument('--model-parallel-size', type=int, default=1, help='size of the model parallel.')
     group.add_argument('--shuffle', action='store_true',
-                       help='Shuffle data. Shuffling is deterministic '
-                            'based on seed and current epoch.')
+                       help='Shuffle data. Shuffling is deterministic based on seed and current epoch.')
     group.add_argument('--filter-english', action='store_true')
+    
     group.add_argument('--train-data', nargs='+', default=None,
-                       help='Whitespace separated filenames or corpora names '
-                            'for training.')
-    group.add_argument('--valid-data', nargs='*', default=None,
-                       help="""Filename for validation data.""")
-    group.add_argument('--test-data', nargs='*', default=None,
-                       help="""Filename for testing""")
+                       help='Whitespace separated filenames or corpora names for training.')
+    
+    group.add_argument('--valid-data', nargs='*', default=None, help="""Filename for validation data.""")
+    
+    group.add_argument('--test-data', nargs='*', default=None, help="""Filename for testing""")
+    
     group.add_argument('--data-dir', type=str, default=None, help="The data path to all the data files")
+    
+    
     group.add_argument('--input-data-sizes-file', type=str, default='sizes.txt',
                        help='the filename containing all the shards sizes')
 
-    group.add_argument('--delim', default=',',
-                       help='delimiter used to parse csv data files')
-    group.add_argument('--text-key', default='sentence',
-                       help='key to use to extract text from json/csv')
-    group.add_argument('--eval-text-key', default=None,
-                       help='key to use to extract text from '
-                            'json/csv evaluation datasets')
-    group.add_argument('--split', default='1000,1,1',
-                       help='comma-separated list of proportions for training,'
-                            ' validation, and test split')
+    group.add_argument('--delim', default=',', help='delimiter used to parse csv data files')
+    group.add_argument('--text-key', default='sentence', help='key to use to extract text from json/csv')
+    group.add_argument('--eval-text-key', default=None, help='key to use to extract text from json/csv evaluation datasets')
+    group.add_argument('--split', default='1000,1,1', help='comma-separated list of proportions for training, validation, and test split')
 
-    group.add_argument('--no-lazy-loader', action='store_true',
-                       help='whether to lazy read the data set')
+    group.add_argument('--no-lazy-loader', action='store_true', help='whether to lazy read the data set')
     group.add_argument('--half-lazy-loader', action='store_true')
     group.add_argument('--loader-scatter', type=int, default=None, help='Number of scatters to use for dataloaders')
     group.add_argument('--loose-json', action='store_true',
-                       help='Use loose json (one json-formatted string per '
-                            'newline), instead of tight json (data file is one '
+                       help='Use loose json (one json-formatted string per newline), instead of tight json (data file is one '
                             'json string)')
     group.add_argument('--presplit-sentences', action='store_true',
-                       help='Dataset content consists of documents where '
-                            'each document consists of newline separated sentences')
-    group.add_argument('--num-workers', type=int, default=2,
-                       help="""Number of workers to use for dataloading""")
+                       help='Dataset content consists of documents where each document consists of newline separated sentences')
+    group.add_argument('--num-workers', type=int, default=2, help="""Number of workers to use for dataloading""")
     group.add_argument('--tokenizer-model-type', type=str,
                        default=None,
                        help="Model type to use for sentencepiece tokenization \
@@ -315,8 +306,7 @@ def add_data_args(parser):
                        bert vocab to use for BertWordPieceTokenizer (one of \
                        ['bert-large-uncased', 'bert-large-cased', etc.])")
     group.add_argument('--tokenizer-path', type=str, default='tokenizer.model',
-                       help='path used to save/load sentencepiece tokenization '
-                            'models')
+                       help='path used to save/load sentencepiece tokenization models')
     group.add_argument('--tokenizer-type', type=str,
                        default='BertWordPieceTokenizer',
                        choices=['CharacterLevelTokenizer',
@@ -327,16 +317,13 @@ def add_data_args(parser):
                        help='what type of tokenizer to use')
     group.add_argument('--fix-command-token', action='store_true')
     group.add_argument('--no-pre-tokenize', action='store_true')
-    group.add_argument("--cache-dir", default=None, type=str,
-                       help="Where to store pre-trained BERT downloads")
+    group.add_argument("--cache-dir", default=None, type=str, help="Where to store pre-trained BERT downloads")
     group.add_argument('--use-tfrecords', action='store_true',
                        help='load `--train-data`, `--valid-data`, '
                             '`--test-data` from BERT tf records instead of '
                             'normal data pipeline')
-    group.add_argument('--seq-length', type=int, default=512,
-                       help="Maximum sequence length to process")
-    group.add_argument('--mem-length', type=int, default=0,
-                       help="The memory length to preserve")
+    group.add_argument('--seq-length', type=int, default=512, help="Maximum sequence length to process")
+    group.add_argument('--mem-length', type=int, default=0, help="The memory length to preserve")
     group.add_argument('--max-preds-per-seq', type=int, default=None,
                        help='Maximum number of predictions to use per sequence. '
                             'Defaults to math.ceil(`--seq-length`*.15/10)*10. '
@@ -346,8 +333,7 @@ def add_data_args(parser):
     group.add_argument('--load-splits', type=str, default=None, help="The path to load split indices from")
     group.add_argument('--save-splits', type=str, default=None, help="The path to save split indices to")
     group.add_argument('--save-test-data', type=str, default=None, help="The path to save the test data")
-    group.add_argument('--multi-task-data', nargs='*', default=None,
-                       help="Downstream task names for multi-task pre-training")
+    group.add_argument('--multi-task-data', nargs='*', default=None, help="Downstream task names for multi-task pre-training")
     group.add_argument('--multi-task-ratio', type=float, default=0.0, help="Ratio for multi-task pre-training")
     group.add_argument('--multi-seq-length', type=int, default=None)
     group.add_argument('--multi-batch-size', type=int, default=None)
@@ -494,8 +480,8 @@ def mpi_define_env(args):
 
     print(
         "Discovered MPI settings of world_rank={}, local_rank={}, world_size={}, master_addr={}, master_port={}"
-            .format(os.environ['RANK'],
-                    args.local_rank,
-                    os.environ['WORLD_SIZE'],
-                    os.environ['MASTER_ADDR'],
-                    os.environ['MASTER_PORT']))
+        .format(os.environ['RANK'],
+                args.local_rank,
+                os.environ['WORLD_SIZE'],
+                os.environ['MASTER_ADDR'],
+                os.environ['MASTER_PORT']))
