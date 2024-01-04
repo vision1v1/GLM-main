@@ -70,8 +70,7 @@ def scaled_init_method(mean, std, num_layers):
 
 def ensure_divisibility(numerator, denominator):
     """Ensure that numerator is divisible by the denominator."""
-    assert numerator % denominator == 0, '{} is not divisible by {}'.format(
-        numerator, denominator)
+    assert numerator % denominator == 0, '{} is not divisible by {}'.format(numerator, denominator)
 
 
 def divide(numerator, denominator):
@@ -81,8 +80,7 @@ def divide(numerator, denominator):
     return numerator // denominator
 
 
-def split_tensor_along_last_dim(tensor, num_partitions,
-                                contiguous_split_chunks=False):
+def split_tensor_along_last_dim(tensor, num_partitions, contiguous_split_chunks=False):
     """Split a tensor along its last dimension.
     Arguments:
         tensor: input tensor.
@@ -121,19 +119,21 @@ class MLP(torch.nn.Module):
                                   use `init_method`.
     """
 
-    def __init__(self, hidden_size, output_dropout_prob, init_method,
+    def __init__(self,
+                 hidden_size,
+                 output_dropout_prob,
+                 init_method,
                  output_layer_init_method=None):
         super(MLP, self).__init__()
         # Set output layer initialization if not provided.
         if output_layer_init_method is None:
             output_layer_init_method = init_method
+
         # Project to 4h.
         self.dense_h_to_4h = Linear(hidden_size, 4 * hidden_size)
 
         # Project back to h.
-        self.dense_4h_to_h = Linear(
-            4 * hidden_size,
-            hidden_size)
+        self.dense_4h_to_h = Linear(4 * hidden_size, hidden_size)
 
         self.dropout = torch.nn.Dropout(output_dropout_prob)
 
@@ -176,8 +176,7 @@ class VocabEmbedding(torch.nn.Module):
         self.vocab_end_index = self.num_embeddings
 
         # Allocate weights.
-        self.weight = Parameter(torch.Tensor(self.num_embeddings,
-                                             self.embedding_dim))
+        self.weight = Parameter(torch.Tensor(self.num_embeddings, self.embedding_dim))
         # And initialize.
         init.xavier_normal_(self.weight)
 
@@ -237,9 +236,13 @@ class SelfAttention(torch.nn.Module):
         s: sequence length
     """
 
-    def __init__(self, hidden_size, num_attention_heads,
-                 attention_dropout_prob, output_dropout_prob,
-                 init_method, output_layer_init_method=None,
+    def __init__(self,
+                 hidden_size,
+                 num_attention_heads,
+                 attention_dropout_prob,
+                 output_dropout_prob,
+                 init_method,
+                 output_layer_init_method=None,
                  attention_scale=1.0):
         super(SelfAttention, self).__init__()
         # Set output layer initialization if not provided.
@@ -247,8 +250,7 @@ class SelfAttention(torch.nn.Module):
             output_layer_init_method = init_method
         # Per attention head and per partition values.
         self.hidden_size = hidden_size
-        self.hidden_size_per_attention_head = divide(hidden_size,
-                                                     num_attention_heads)
+        self.hidden_size_per_attention_head = divide(hidden_size, num_attention_heads)
 
         self.num_attention_heads = num_attention_heads
         self.attention_scale = attention_scale
@@ -261,17 +263,14 @@ class SelfAttention(torch.nn.Module):
         self.attention_dropout = torch.nn.Dropout(attention_dropout_prob)
 
         # Output.
-        self.dense = Linear(hidden_size,
-                            hidden_size)
+        self.dense = Linear(hidden_size, hidden_size)
         self.output_dropout = torch.nn.Dropout(output_dropout_prob)
 
     def _transpose_for_scores(self, tensor):
         """Transpose a 3D tensor [b, s, np*hn] into a 4D tensor with
         size [b, np, s, hn].
         """
-        new_tensor_shape = tensor.size()[:-1] + \
-                           (self.num_attention_heads,
-                            self.hidden_size_per_attention_head)
+        new_tensor_shape = tensor.size()[:-1] + (self.num_attention_heads, self.hidden_size_per_attention_head)
         tensor = tensor.view(*new_tensor_shape)
         return tensor.permute(0, 2, 1, 3)
 
@@ -303,11 +302,9 @@ class SelfAttention(torch.nn.Module):
         if self.attention_scale > 1.0:
             # Raw attention scores. [b, np, s, s]
             attention_scores = torch.matmul(query_layer / math.sqrt(self.attention_scale),
-                                            key_layer.transpose(-1, -2) / math.sqrt(
-                                                self.hidden_size_per_attention_head * self.attention_scale))
+                                            key_layer.transpose(-1, -2) / math.sqrt(self.hidden_size_per_attention_head * self.attention_scale))
         else:
-            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2) / math.sqrt(
-                self.hidden_size_per_attention_head))
+            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2) / math.sqrt(self.hidden_size_per_attention_head))
 
         # Apply the left to right attention mask.
         ltor_mask = ltor_mask.type_as(attention_scores)
@@ -330,8 +327,7 @@ class SelfAttention(torch.nn.Module):
         context_layer = torch.matmul(attention_probs, value_layer)
         # [b, s, np, hn]
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + \
-                                  (self.hidden_size,)
+        new_context_layer_shape = context_layer.size()[:-2] + (self.hidden_size,)
         # [b, s, hp]
         context_layer = context_layer.view(*new_context_layer_shape)
 
@@ -389,25 +385,23 @@ class GLMBlock(torch.nn.Module):
         self.input_layernorm = LayerNorm(hidden_size, eps=layernorm_epsilon)
 
         # Self attention.
-        self.attention = SelfAttention(
-            hidden_size,
-            num_attention_heads,
-            attention_dropout_prob,
-            output_dropout_prob,
-            init_method,
-            output_layer_init_method=output_layer_init_method,
-            attention_scale=attention_scale)
+        self.attention = SelfAttention(hidden_size,
+                                       num_attention_heads,
+                                       attention_dropout_prob,
+                                       output_dropout_prob,
+                                       init_method,
+                                       output_layer_init_method=output_layer_init_method,
+                                       attention_scale=attention_scale)
 
         # Layernorm on the input data.
         self.post_attention_layernorm = LayerNorm(hidden_size,
                                                   eps=layernorm_epsilon)
 
         # MLP
-        self.mlp = MLP(
-            hidden_size,
-            output_dropout_prob,
-            init_method,
-            output_layer_init_method=output_layer_init_method)
+        self.mlp = MLP(hidden_size,
+                       output_dropout_prob,
+                       init_method,
+                       output_layer_init_method=output_layer_init_method)
 
     def forward(self, hidden_states, ltor_mask, mem=None):
         # hidden_states: [b, s, h]
@@ -479,8 +473,7 @@ class GLMStack(torch.nn.Module):
                  init_method_std=0.02,
                  use_scaled_init_for_output_weights=True,
                  block_position_encoding=False,
-                 attention_scale=1.0,
-                 ):
+                 attention_scale=1.0):
         super(GLMStack, self).__init__()
         self.hidden_size = hidden_size
         # Store activation checkpoiting flag.
@@ -489,8 +482,7 @@ class GLMStack(torch.nn.Module):
 
         output_layer_init_method = None
         if use_scaled_init_for_output_weights:
-            output_layer_init_method = scaled_init_method(0.0, init_method_std,
-                                                          num_layers)
+            output_layer_init_method = scaled_init_method(0.0, init_method_std, num_layers)
         # Embeddings dropout
         self.embedding_dropout = torch.nn.Dropout(embedding_dropout_prob)
         self.block_position_encoding = block_position_encoding
@@ -507,19 +499,17 @@ class GLMStack(torch.nn.Module):
 
         def get_layer():
 
-            return GLMBlock(
-                hidden_size,
-                num_attention_heads,
-                attention_dropout_prob,
-                output_dropout_prob,
-                layernorm_epsilon,
-                unscaled_init_method(init_method_std),
-                output_layer_init_method=output_layer_init_method,
-                attention_scale=attention_scale)
+            return GLMBlock(hidden_size,
+                            num_attention_heads,
+                            attention_dropout_prob,
+                            output_dropout_prob,
+                            layernorm_epsilon,
+                            unscaled_init_method(init_method_std),
+                            output_layer_init_method=output_layer_init_method,
+                            attention_scale=attention_scale)
 
         # Transformer layers.
-        self.layers = torch.nn.ModuleList(
-            [get_layer() for _ in range(num_layers)])
+        self.layers = torch.nn.ModuleList([get_layer() for _ in range(num_layers)])
 
         # Final layer norm before output.
         self.final_layernorm = LayerNorm(hidden_size, eps=layernorm_epsilon)
@@ -586,11 +576,9 @@ class GLMStack(torch.nn.Module):
             mem_i = memory_states[i] if memory_states else None
 
             if self.checkpoint_activations:
-                hidden_states = torch.utils.checkpoint.checkpoint(
-                    create_custom_forward(layer),
-                    hidden_states,
-                    mem=mem_i,
-                )
+                hidden_states = torch.utils.checkpoint.checkpoint(create_custom_forward(layer),
+                                                                  hidden_states,
+                                                                  mem=mem_i)
             else:
                 hidden_states = layer(*args, mem=mem_i)
             mem_layers.append(check_detach(hidden_states))
@@ -752,20 +740,16 @@ class GLMModel(GLMPreTrainedModel):
         self.post_init()
 
     @add_start_docstrings_to_model_forward(GLM_INPUTS_DOCSTRING.format("batch_size, sequence_length"))
-    @add_code_sample_docstrings(
-        processor_class=_TOKENIZER_FOR_DOC,
-        checkpoint=_CHECKPOINT_FOR_DOC,
-        output_type=BaseModelOutputWithPastAndCrossAttentions,
-        config_class=_CONFIG_FOR_DOC,
-    )
-    def forward(
-            self,
-            input_ids=None,
-            position_ids=None,
-            attention_mask=None,
-            mems=None,
-            **kwargs
-    ):
+    @add_code_sample_docstrings(processor_class=_TOKENIZER_FOR_DOC,
+                                checkpoint=_CHECKPOINT_FOR_DOC,
+                                output_type=BaseModelOutputWithPastAndCrossAttentions,
+                                config_class=_CONFIG_FOR_DOC)
+    def forward(self,
+                input_ids=None,
+                position_ids=None,
+                attention_mask=None,
+                mems=None,
+                **kwargs):
         batch_size = input_ids.size(0)
         words_embeddings = self.word_embeddings(input_ids)
         embeddings = words_embeddings
@@ -786,34 +770,27 @@ class GLMModel(GLMPreTrainedModel):
         if self.output_predict:
             logits = F.linear(last_hidden_states, self.word_embeddings.weight)
 
-        return ModelOutput(
-            last_hidden_states=last_hidden_states,
-            logits=logits,
-            mems=mems,
-        )
+        return ModelOutput(last_hidden_states=last_hidden_states,
+                           logits=logits,
+                           mems=mems)
 
 
-@add_start_docstrings(
-    """GLM Model transformer for multiple choice classification""",
-    GLM_START_DOCSTRING
-)
+@add_start_docstrings("""GLM Model transformer for multiple choice classification""", GLM_START_DOCSTRING)
 class GLMForMultipleChoice(GLMPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.glm = GLMModel(config)
         self.post_init()
 
-    def forward(
-            self,
-            input_ids=None,
-            position_ids=None,
-            attention_mask=None,
-            choice_ids=None,
-            choice_indices=None,
-            labels=None,
-            mems=None,
-            **kwargs
-    ):
+    def forward(self,
+                input_ids=None,
+                position_ids=None,
+                attention_mask=None,
+                choice_ids=None,
+                choice_indices=None,
+                labels=None,
+                mems=None,
+                **kwargs):
         model_output = self.glm(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
         lm_logits = model_output.logits
         log_probs = []
@@ -828,17 +805,13 @@ class GLMForMultipleChoice(GLMPreTrainedModel):
         if labels is not None:
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(log_probs, labels)
-        return ModelOutput(
-            loss=loss,
-            logits=log_probs,
-            lm_logits=lm_logits,
-            mems=model_output.mems
-        )
+        return ModelOutput(loss=loss,
+                           logits=log_probs,
+                           lm_logits=lm_logits,
+                           mems=model_output.mems)
 
-@add_start_docstrings(
-    """GLM Model transformer with a `language modeling` head on top""",
-    GLM_START_DOCSTRING,
-)
+
+@add_start_docstrings("""GLM Model transformer with a `language modeling` head on top""", GLM_START_DOCSTRING)
 class GLMForConditionalGeneration(GLMPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
@@ -853,12 +826,10 @@ class GLMForConditionalGeneration(GLMPreTrainedModel):
         reordered_decoder_past = ()
         for layer_past_states in past:
             # get the correct batch idx from layer past batch dim
-            reordered_decoder_past = reordered_decoder_past + (
-                layer_past_states.index_select(0, beam_idx.to(layer_past_states.device)),)
+            reordered_decoder_past = reordered_decoder_past + (layer_past_states.index_select(0, beam_idx.to(layer_past_states.device)),)
         return reordered_decoder_past
 
-    def prepare_inputs_for_generation(self, input_ids, past=None, position_ids=None, generation_attention_mask=None,
-                                      **kwargs):
+    def prepare_inputs_for_generation(self, input_ids, past=None, position_ids=None, generation_attention_mask=None, **kwargs):
         # only last token for inputs_ids if past is defined in kwargs
         attention_mask = generation_attention_mask
         seq_length = input_ids.shape[1]
@@ -890,26 +861,22 @@ class GLMForConditionalGeneration(GLMPreTrainedModel):
             "mems": past,
         }
 
-    def forward(
-            self,
-            input_ids=None,
-            position_ids=None,
-            attention_mask=None,
-            labels=None,
-            mems=None,
-            **kwargs
-    ):
+    def forward(self,
+                input_ids=None,
+                position_ids=None,
+                attention_mask=None,
+                labels=None,
+                mems=None,
+                **kwargs):
         model_output = self.glm(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
         lm_logits = model_output.logits
         loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss(ignore_index=-100)
             loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
-        return ModelOutput(
-            loss=loss,
-            logits=lm_logits,
-            mems=model_output.mems
-        )
+        return ModelOutput(loss=loss,
+                           logits=lm_logits,
+                           mems=model_output.mems)
 
 
 @add_start_docstrings(
@@ -926,9 +893,7 @@ class GLMForSequenceClassification(GLMPreTrainedModel):
         self.num_class = num_class
         # Multi-choice head.
         self.dense = torch.nn.Linear(config.hidden_size, config.hidden_size)
-        classifier_dropout = (
-            config.classifier_dropout if config.classifier_dropout is not None else config.output_dropout_prob
-        )
+        classifier_dropout = config.classifier_dropout if config.classifier_dropout is not None else config.output_dropout_prob
         self.dropout = torch.nn.Dropout(classifier_dropout)
         self.out_proj = torch.nn.Linear(config.hidden_size, config.num_labels)
 
