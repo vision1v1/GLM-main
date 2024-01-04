@@ -36,10 +36,18 @@
         "version": "0.2.0",
         "configurations": [
             {
+				"name": "debug_glm.py",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder:GLM-main}/debug/debug_glm.py",
+                "justMyCode": true
+			},
+            {
 				"name": "debug_generation.py",
 				"type": "python",
 				"request": "launch",
 				"program": "${workspaceFolder:GLM-main}/debug/debug_generation.py",
+                "justMyCode": false
 			},
             {
 				"name": "generate_samples.py",
