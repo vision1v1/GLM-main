@@ -14,7 +14,6 @@ def debug_glm(path):
     tokenizer = AutoTokenizer.from_pretrained(path, trust_remote_code=True)
     model = AutoModelForSeq2SeqLM.from_pretrained(path, trust_remote_code=True)
     model = model.half().cuda()
-    model.eval()
     return tokenizer, model
 
 # path = "THUDM/glm-2b"
@@ -25,6 +24,7 @@ tokenizer, model = debug_glm(path)
 
 def debug_inference():
     # Inference
+    model.eval()
     test_data = "Ng is an adjunct professor at [MASK] (formerly associate professor and Director of its Stanford AI Lab or SAIL ). Also a pioneer in online education, Ng co-founded Coursera and deeplearning.ai."
 
     inputs = tokenizer(test_data, return_tensors="pt")
@@ -36,6 +36,7 @@ def debug_inference():
 
 def debug_training():
     # Training
+    model.train()
     train_data = ["Tsinghua University is located in [MASK].", "One minus one equals zero, is it correct? Answer: [MASK]"]
     inputs = tokenizer(train_data, return_tensors="pt", padding=True)
     inputs = tokenizer.build_inputs_for_generation(inputs, targets=["Beijing", "No"], max_gen_length=8, padding=False)
@@ -43,9 +44,9 @@ def debug_training():
     outputs = model(**inputs)
     loss = outputs.loss
     logits = outputs.logits
-
+    print("loss = ", loss, "logits = ", logits, sep='\n', end='\n\n')
 
 if __name__ == "__main__":
-    debug_inference()
+    # debug_inference()
     debug_training()
     ...
