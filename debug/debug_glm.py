@@ -75,8 +75,8 @@ def debug_model_inferance():
 
 
 if __name__ == "__main__":
-    # debug_tokenizer()
+    debug_tokenizer()
     # debug_config()
     # debug_model_forward()
-    debug_model_inferance()
+    # debug_model_inferance()
     ...

@@ -109,12 +109,10 @@ class GLMTokenizerMixin:
 
     def _pad_batch(self, tokens, position_ids, attention_mask, max_seq_length):
         pad_length = max_seq_length - len(tokens)
-        attention_mask = torch.nn.functional.pad(
-            attention_mask,
-            (0, pad_length, 0, pad_length),
-            mode="constant",
-            value=0,
-        )
+        attention_mask = torch.nn.functional.pad(attention_mask,
+                                                 (0, pad_length, 0, pad_length),
+                                                 mode="constant",
+                                                 value=0)
         tokens = torch.cat((tokens, torch.zeros(pad_length, dtype=torch.long)))
         position_ids = torch.cat((position_ids, position_ids[..., -1:].expand(-1, pad_length)), dim=-1)
         return tokens, position_ids, attention_mask
@@ -127,9 +125,10 @@ class GLMTokenizerMixin:
         choices_batch, choice_target_ids_batch = [], []
 
         for sample in samples:
-            token, position_id, attention_mask = self._pad_batch(
-                sample["input_ids"], sample["position_ids"], sample["attention_mask"], length_to_pad
-            )
+            token, position_id, attention_mask = self._pad_batch(sample["input_ids"],
+                                                                 sample["position_ids"],
+                                                                 sample["attention_mask"],
+                                                                 length_to_pad)
             token_batch.append(token)
             position_id_batch.append(position_id)
             attention_mask_batch.append(attention_mask)
@@ -145,8 +144,7 @@ class GLMTokenizerMixin:
 
     def build_inputs_for_multiple_choice(self, model_input: BatchEncoding, choices, max_length=None):
         samples = [{key: value[i] for key, value in model_input.items()} for i in range(len(model_input["input_ids"]))]
-        samples = [self._build_input_for_multiple_choice(sample, choice) for sample, choice in
-                   zip(samples, choices)]
+        samples = [self._build_input_for_multiple_choice(sample, choice) for sample, choice in zip(samples, choices)]
         inputs = self._collate(samples)
         return GLMBatchEncoding(inputs)
 
@@ -273,9 +271,9 @@ class GLMChineseTokenizer(PreTrainedTokenizer, GLMTokenizerMixin):
 
         return (out_vocab_file,)
 
-    def build_inputs_with_special_tokens(
-            self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
-    ) -> List[int]:
+    def build_inputs_with_special_tokens(self,
+                                         token_ids_0: List[int],
+                                         token_ids_1: Optional[List[int]] = None) -> List[int]:
         """
         Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
         adding special tokens. A BERT sequence has the following format:
@@ -302,9 +300,9 @@ class GLMGPT2Tokenizer(GPT2Tokenizer, GLMTokenizerMixin):
     model_input_names = ["input_ids", "position_ids", "attention_mask"]
     truncation_side: str = "left"
 
-    def build_inputs_with_special_tokens(
-            self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
-    ) -> List[int]:
+    def build_inputs_with_special_tokens(self,
+                                         token_ids_0: List[int],
+                                         token_ids_1: Optional[List[int]] = None) -> List[int]:
         """
         Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
         adding special tokens. A BERT sequence has the following format:
