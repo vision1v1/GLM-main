@@ -23,4 +23,4 @@ GLMForConditionalGeneration --> 任务入口
                 3 LayerNorm
                 4 MLP
            4 LayerNorm   ---> 
-        3 Linear ---> ? weight 来自 word embedding
+       3 Linear ---> ? weight 来自 word embedding
