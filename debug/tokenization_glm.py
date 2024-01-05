@@ -186,9 +186,7 @@ class GLMTokenizerMixin:
         position_ids = torch.stack((position_ids, block_position_ids), dim=1)
         attention_mask = model_input.attention_mask
         attention_mask = attention_mask.unsqueeze(1).expand(-1, seq_length + max_gen_length, -1)
-        generation_attention_mask = torch.cat([attention_mask.new_zeros((seq_length, max_gen_length)),
-                                               torch.tril(attention_mask.new_ones((max_gen_length, max_gen_length)))],
-                                              dim=0).unsqueeze(0).expand(batch_size, -1, -1)
+        generation_attention_mask = torch.cat([attention_mask.new_zeros((seq_length, max_gen_length)), torch.tril(attention_mask.new_ones((max_gen_length, max_gen_length)))], dim=0).unsqueeze(0).expand(batch_size, -1, -1)
         attention_mask = torch.cat((attention_mask, generation_attention_mask), dim=2)
         attention_mask = attention_mask.unsqueeze(1)
         if targets is None:
