@@ -304,7 +304,8 @@ class SelfAttention(torch.nn.Module):
             attention_scores = torch.matmul(query_layer / math.sqrt(self.attention_scale),
                                             key_layer.transpose(-1, -2) / math.sqrt(self.hidden_size_per_attention_head * self.attention_scale))
         else:
-            attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2) / math.sqrt(self.hidden_size_per_attention_head))
+            attention_scores = torch.matmul(query_layer,
+                                            key_layer.transpose(-1, -2) / math.sqrt(self.hidden_size_per_attention_head))
 
         # Apply the left to right attention mask.
         ltor_mask = ltor_mask.type_as(attention_scores)
@@ -332,7 +333,7 @@ class SelfAttention(torch.nn.Module):
         context_layer = context_layer.view(*new_context_layer_shape)
 
         # Output. [b, s, h]
-        output = self.dense(context_layer)
+        output = self.dense.forward(context_layer)
         output = self.output_dropout(output)
 
         return output
@@ -408,16 +409,16 @@ class GLMBlock(torch.nn.Module):
         # ltor_mask: [b,1, s,s]
 
         # Layer norm at the begining of the transformer layer.
-        layernorm_output = self.input_layernorm(hidden_states)
-        mem = self.input_layernorm(mem) if mem is not None else None
+        layernorm_output = self.input_layernorm.forward(hidden_states)
+        mem = self.input_layernorm.forward(mem) if mem is not None else None
         # Self attention.
-        attention_output = self.attention(layernorm_output, ltor_mask, mem)
+        attention_output = self.attention.forward(layernorm_output, ltor_mask, mem)
         # Residual connection.
         layernorm_input = hidden_states + attention_output
         # Layer norm post the self attention.
-        layernorm_output = self.post_attention_layernorm(layernorm_input)
+        layernorm_output = self.post_attention_layernorm.forward(layernorm_input)
         # MLP.
-        mlp_output = self.mlp(layernorm_output)
+        mlp_output = self.mlp.forward(layernorm_output)
         # Second residual connection.
         output = layernorm_input + mlp_output
 
@@ -549,13 +550,13 @@ class GLMStack(torch.nn.Module):
 
         if self.block_position_encoding:
             position_ids, block_position_ids = position_ids[:, 0], position_ids[:, 1]
-        position_embeddings = self.position_embeddings(position_ids)
+        position_embeddings = self.position_embeddings.forward(position_ids)
 
         hidden_states = hidden_states + position_embeddings
         if self.block_position_encoding:
-            block_position_embeddings = self.block_position_embeddings(block_position_ids)
+            block_position_embeddings = self.block_position_embeddings.forward(block_position_ids)
             hidden_states = hidden_states + block_position_embeddings
-        hidden_states = self.embedding_dropout(hidden_states)
+        hidden_states = self.embedding_dropout.forward(hidden_states)
 
         def check_detach(_hidden_states):
             return _hidden_states.detach()
@@ -580,11 +581,11 @@ class GLMStack(torch.nn.Module):
                                                                   hidden_states,
                                                                   mem=mem_i)
             else:
-                hidden_states = layer(*args, mem=mem_i)
+                hidden_states = layer.forward(*args, mem=mem_i)
             mem_layers.append(check_detach(hidden_states))
 
         # Final layer norm.
-        output = self.final_layernorm(hidden_states)
+        output = self.final_layernorm.forward(hidden_states)
         mem_layers = self.update_mems(mem_layers, memory_states)
         return (output, mem_layers)
 
@@ -696,10 +697,8 @@ GLM_INPUTS_DOCSTRING = r"""
 """
 
 
-@add_start_docstrings(
-    "The bare GLM Model transformer outputting raw hidden-states without any specific head on top.",
-    GLM_START_DOCSTRING,
-)
+@add_start_docstrings("The bare GLM Model transformer outputting raw hidden-states without any specific head on top.",
+                      GLM_START_DOCSTRING)
 class GLMModel(GLMPreTrainedModel):
     """
 
@@ -751,7 +750,7 @@ class GLMModel(GLMPreTrainedModel):
                 mems=None,
                 **kwargs):
         batch_size = input_ids.size(0)
-        words_embeddings = self.word_embeddings(input_ids)
+        words_embeddings = self.word_embeddings.forward(input_ids)
         embeddings = words_embeddings
 
         device = input_ids.device
@@ -764,7 +763,7 @@ class GLMModel(GLMPreTrainedModel):
         if attention_mask is None:
             attention_mask = torch.zeros(batch_size)
         # Transformer.
-        transformer_output = self.transformer(embeddings, position_ids, attention_mask, mems)
+        transformer_output = self.transformer.forward(embeddings, position_ids, attention_mask, mems)
         last_hidden_states, mems = transformer_output
         logits = None
         if self.output_predict:
@@ -791,7 +790,7 @@ class GLMForMultipleChoice(GLMPreTrainedModel):
                 labels=None,
                 mems=None,
                 **kwargs):
-        model_output = self.glm(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
+        model_output = self.glm.forward(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
         lm_logits = model_output.logits
         log_probs = []
         for output, choices, choice_index in zip(F.log_softmax(lm_logits, dim=-1), choice_ids, choice_indices):
@@ -868,7 +867,7 @@ class GLMForConditionalGeneration(GLMPreTrainedModel):
                 labels=None,
                 mems=None,
                 **kwargs):
-        model_output = self.glm(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
+        model_output = self.glm.forward(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
         lm_logits = model_output.logits
         loss = None
         if labels is not None:
