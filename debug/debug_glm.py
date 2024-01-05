@@ -4,6 +4,7 @@ import json
 from tokenization_glm import GLMGPT2Tokenizer
 from configuration_glm import GLMConfig
 from modeling_glm import GLMPreTrainedModel, GLMForConditionalGeneration
+from transformers.tokenization_utils_base import BatchEncoding
 
 train_data = ["Tsinghua University is located in [MASK].", "One minus one equals zero, is it correct? Answer: [MASK]"]
 test_data = "Ng is an adjunct professor at [MASK] (formerly associate professor and Director of its Stanford AI Lab or SAIL ). Also a pioneer in online education, Ng co-founded Coursera and deeplearning.ai."
@@ -15,7 +16,7 @@ def debug_tokenizer():
     调试tokenizer, 这个可以在本地调试
     """
     tokenizer:GLMGPT2Tokenizer = GLMGPT2Tokenizer.from_pretrained(glm2b_path)
-    inputs = tokenizer(train_data, return_tensors="pt", padding=True) # build_inputs_with_special_tokens
+    inputs:BatchEncoding = tokenizer(train_data, return_tensors="pt", padding=True) # build_inputs_with_special_tokens
     print("inputs = ", inputs, sep='\n')
     inputs = tokenizer.build_inputs_for_generation(inputs, targets=["Beijing", "No"], max_gen_length=8, padding=False)
     print("inputs = ", inputs, sep='\n')
