@@ -29,48 +29,22 @@ def add_model_config_args(parser):
     group = parser.add_argument_group('model', 'model configuration')
 
     group.add_argument('--transformer-xl', action='store_true', help='use transformer-xl for training')
-    group.add_argument('--pretrained-bert', action='store_true',
-                       help='use a pretrained bert-large-uncased model instead'
-                            'of initializing from scratch. See '
-                            '--tokenizer-model-type to specify which pretrained '
-                            'BERT model to use')
-    group.add_argument('--encoder-decoder', action='store_true',
-                       help="use the encoder-decoder architecture for blocklm")
-    group.add_argument('--attention-dropout', type=float, default=0.1,
-                       help='dropout probability for attention weights')
-    group.add_argument('--num-attention-heads', type=int, default=16,
-                       help='num of transformer attention heads')
-    group.add_argument('--hidden-size', type=int, default=1024,
-                       help='transformer hidden size')
-    group.add_argument('--intermediate-size', type=int, default=None,
-                       help='transformer embedding dimension for FFN'
-                            'set to 4*`--hidden-size` if it is None')
-    group.add_argument('--num-layers', type=int, default=24,
-                       help='num decoder layers')
-    group.add_argument('--layernorm-epsilon', type=float, default=1e-5,
-                       help='layer norm epsilon')
-    group.add_argument('--hidden-dropout', type=float, default=0.1,
-                       help='dropout probability for hidden state transformer')
-    group.add_argument('--output-dropout', type=float, default=0.1,
-                       help='dropout probability for pooled output')
-    group.add_argument('--max-position-embeddings', type=int, default=512,
-                       help='maximum number of position embeddings to use')
-    group.add_argument('--vocab-size', type=int, default=30522,
-                       help='vocab size to use for non-character-level '
-                            'tokenization. This value will only be used when '
-                            'creating a tokenizer')
-    group.add_argument('--deep-init', action='store_true',
-                       help='initialize bert model similar to gpt2 model.'
-                            'scales initialization of projection layers by a '
-                            'factor of 1/sqrt(2N). Necessary to train bert '
-                            'models larger than BERT-Large.')
-    group.add_argument('--make-vocab-size-divisible-by', type=int, default=128,
-                       help='Pad the vocab size to be divisible by this value.'
-                            'This is added for computational efficiency reasons.')
-    group.add_argument('--cpu-optimizer', action='store_true',
-                       help='Run optimizer on CPU')
-    group.add_argument('--cpu_torch_adam', action='store_true',
-                       help='Use Torch Adam as optimizer on CPU.')
+    group.add_argument('--pretrained-bert', action='store_true', help='use a pretrained bert-large-uncased model instead of initializing from scratch. See --tokenizer-model-type to specify which pretrained BERT model to use')
+    group.add_argument('--encoder-decoder', action='store_true', help="use the encoder-decoder architecture for blocklm")
+    group.add_argument('--attention-dropout', type=float, default=0.1, help='dropout probability for attention weights')
+    group.add_argument('--num-attention-heads', type=int, default=16, help='num of transformer attention heads')
+    group.add_argument('--hidden-size', type=int, default=1024, help='transformer hidden size')
+    group.add_argument('--intermediate-size', type=int, default=None, help='transformer embedding dimension for FFN set to 4*`--hidden-size` if it is None')
+    group.add_argument('--num-layers', type=int, default=24, help='num decoder layers')
+    group.add_argument('--layernorm-epsilon', type=float, default=1e-5, help='layer norm epsilon')
+    group.add_argument('--hidden-dropout', type=float, default=0.1, help='dropout probability for hidden state transformer')
+    group.add_argument('--output-dropout', type=float, default=0.1, help='dropout probability for pooled output')
+    group.add_argument('--max-position-embeddings', type=int, default=512, help='maximum number of position embeddings to use')
+    group.add_argument('--vocab-size', type=int, default=30522, help='vocab size to use for non-character-level tokenization. This value will only be used when creating a tokenizer')
+    group.add_argument('--deep-init', action='store_true', help='initialize bert model similar to gpt2 model. scales initialization of projection layers by a factor of 1/sqrt(2N). Necessary to train bert models larger than BERT-Large.')
+    group.add_argument('--make-vocab-size-divisible-by', type=int, default=128, help='Pad the vocab size to be divisible by this value. This is added for computational efficiency reasons.')
+    group.add_argument('--cpu-optimizer', action='store_true', help='Run optimizer on CPU')
+    group.add_argument('--cpu_torch_adam', action='store_true', help='Use Torch Adam as optimizer on CPU.')
 
     return parser
 
@@ -86,10 +60,7 @@ def add_fp16_config_args(parser):
     group.add_argument('--fp32-tokentypes', action='store_true', help='embedding token types in fp32')
     group.add_argument('--fp32-allreduce', action='store_true', help='all-reduce in fp32')
     group.add_argument('--hysteresis', type=int, default=2, help='hysteresis for dynamic loss scaling')
-    group.add_argument('--loss-scale', type=float, default=None,
-                       help='Static loss scaling, positive power of 2 '
-                            'values can improve fp16 convergence. If None, dynamic'
-                            'loss scaling is used.')
+    group.add_argument('--loss-scale', type=float, default=None, help='Static loss scaling, positive power of 2 values can improve fp16 convergence. If None, dynamic loss scaling is used.')
     group.add_argument('--loss-scale-window', type=float, default=1000, help='Window over which to raise/lower dynamic scale')
     group.add_argument('--min-scale', type=float, default=1, help='Minimum loss scale for dynamic loss scale')
     group.add_argument('--attention-scale', type=float, default=1.0)
@@ -105,8 +76,7 @@ def add_training_args(parser):
     group.add_argument('--batch-size', type=int, default=4, help='Data Loader batch size')
     group.add_argument('--gradient-accumulation-steps', type=int, default=1, help='Data Loader batch size')
     group.add_argument('--weight-decay', type=float, default=0.01, help='weight decay coefficient for L2 regularization')
-    group.add_argument('--checkpoint-activations', action='store_true',
-                       help='checkpoint activation to allow for training with larger models and sequences')
+    group.add_argument('--checkpoint-activations', action='store_true', help='checkpoint activation to allow for training with larger models and sequences')
     group.add_argument('--checkpoint-num-layers', type=int, default=1, help='chunk size (number of layers) for checkpointing')
     group.add_argument('--deepspeed-activation-checkpointing', action='store_true', help='uses activation checkpointing from deepspeed')
     group.add_argument('--epochs', type=int, default=None, help='Number of finetuning epochs. Zero results in evaluation only.')
@@ -121,14 +91,11 @@ def add_training_args(parser):
     group.add_argument('--reset-attention-mask', action='store_true', help='Reset self attention masks after end-of-document token.')
 
     # Learning rate.
-    group.add_argument('--lr-decay-iters', type=int, default=None,
-                       help='number of iterations to decay LR over, If None defaults to `--train-iters`*`--epochs`')
-    group.add_argument('--lr-decay-style', type=str, default='linear', choices=['constant', 'linear', 'cosine', 'exponential'],
-                       help='learning rate decay function')
+    group.add_argument('--lr-decay-iters', type=int, default=None, help='number of iterations to decay LR over, If None defaults to `--train-iters`*`--epochs`')
+    group.add_argument('--lr-decay-style', type=str, default='linear', choices=['constant', 'linear', 'cosine', 'exponential'], help='learning rate decay function')
     group.add_argument('--lr-decay-ratio', type=float, default=0.1)
     group.add_argument('--lr', type=float, default=1.0e-4, help='initial learning rate')
-    group.add_argument('--warmup', type=float, default=0.01,
-                       help='percentage of data to warmup on (.01 = 1% of all training iters). Default 0.01')
+    group.add_argument('--warmup', type=float, default=0.01, help='percentage of data to warmup on (.01 = 1% of all training iters). Default 0.01')
     group.add_argument('--switch-linear', action='store_true', help="Switch to linear decay for cosine decay")
     # model checkpointing
     group.add_argument('--save', type=str, default=None, help='Output directory to save checkpoints to.')
@@ -142,19 +109,11 @@ def add_training_args(parser):
     group.add_argument('--no-load-rng', action='store_true', help='Do not load rng state when loading checkpoint.')
     group.add_argument('--no-load-lr-scheduler', action='store_true', help='Do not load lr scheduler when loading checkpoint.')
     group.add_argument('--no-deepspeed-load', action='store_true', help='Not use deepspeed when loading checkpoint')
-    group.add_argument('--finetune', action='store_true',
-                       help='Load model for finetuning. Do not load optimizer '
-                            'or rng state from checkpoint and set iteration to 0. '
-                            'Assumed when loading a release checkpoint.')
-    group.add_argument('--resume-dataloader', action='store_true',
-                       help='Resume the dataloader when resuming training. '
-                            'Does not apply to tfrecords dataloader, try resuming'
-                            'with a different seed in this case.')
+    group.add_argument('--finetune', action='store_true', help='Load model for finetuning. Do not load optimizer or rng state from checkpoint and set iteration to 0. Assumed when loading a release checkpoint.')
+    group.add_argument('--resume-dataloader', action='store_true', help='Resume the dataloader when resuming training. Does not apply to tfrecords dataloader, try resuming with a different seed in this case.')
     # distributed training args
-    group.add_argument('--distributed-backend', default='nccl', choices=['nccl', 'gloo'],
-                       help='which backend to use for distributed training. One of [gloo, nccl]')
-    group.add_argument('--DDP-impl', default='torch', choices=['local', 'torch', 'none'],
-                       help='which DistributedDataParallel implementation to use.')
+    group.add_argument('--distributed-backend', default='nccl', choices=['nccl', 'gloo'], help='which backend to use for distributed training. One of [gloo, nccl]')
+    group.add_argument('--DDP-impl', default='torch', choices=['local', 'torch', 'none'], help='which DistributedDataParallel implementation to use.')
 
     group.add_argument('--local_rank', type=int, default=None, help='local rank passed from distributed launcher')
     # BlockLM training args
@@ -183,23 +142,12 @@ def add_evaluation_args(parser):
 
     group = parser.add_argument_group('validation', 'validation configurations')
 
-    group.add_argument('--eval-batch-size', type=int, default=None,
-                       help='Data Loader batch size for evaluation datasets.'
-                            'Defaults to `--batch-size`')
-    group.add_argument('--eval-iters', type=int, default=100,
-                       help='number of iterations to run for evaluation/'
-                            'validation/test for')
-    group.add_argument('--eval-interval', type=int, default=1000,
-                       help='interval between running evaluation on validation set')
-    group.add_argument('--eval-epoch', type=int, default=1,
-                       help='epoch between running evaluation on validation set')
-    group.add_argument('--eval-seq-length', type=int, default=None,
-                       help='Maximum sequence length to process for '
-                            'evaluation. Defaults to `--seq-length`')
-    group.add_argument('--eval-max-preds-per-seq', type=int, default=None,
-                       help='Maximum number of predictions to use for '
-                            'evaluation. Defaults to '
-                            'math.ceil(`--eval-seq-length`*.15/10)*10')
+    group.add_argument('--eval-batch-size', type=int, default=None, help='Data Loader batch size for evaluation datasets. Defaults to `--batch-size`')
+    group.add_argument('--eval-iters', type=int, default=100, help='number of iterations to run for evaluation/validation/test for')
+    group.add_argument('--eval-interval', type=int, default=1000, help='interval between running evaluation on validation set')
+    group.add_argument('--eval-epoch', type=int, default=1, help='epoch between running evaluation on validation set')
+    group.add_argument('--eval-seq-length', type=int, default=None, help='Maximum sequence length to process for evaluation. Defaults to `--seq-length`')
+    group.add_argument('--eval-max-preds-per-seq', type=int, default=None, help='Maximum number of predictions to use for evaluation. Defaults to math.ceil(`--eval-seq-length`*.15/10)*10')
     group.add_argument('--overlapping-eval', type=int, default=32)
 
     return parser
@@ -228,21 +176,15 @@ def add_data_args(parser):
     group = parser.add_argument_group('data', 'data configurations')
 
     group.add_argument('--model-parallel-size', type=int, default=1, help='size of the model parallel.')
-    group.add_argument('--shuffle', action='store_true',
-                       help='Shuffle data. Shuffling is deterministic based on seed and current epoch.')
+    group.add_argument('--shuffle', action='store_true', help='Shuffle data. Shuffling is deterministic based on seed and current epoch.')
     group.add_argument('--filter-english', action='store_true')
 
-    group.add_argument('--train-data', nargs='+', default=None,
-                       help='Whitespace separated filenames or corpora names for training.')
-
+    group.add_argument('--train-data', nargs='+', default=None, help='Whitespace separated filenames or corpora names for training.')
     group.add_argument('--valid-data', nargs='*', default=None, help="""Filename for validation data.""")
-
     group.add_argument('--test-data', nargs='*', default=None, help="""Filename for testing""")
-
     group.add_argument('--data-dir', type=str, default=None, help="The data path to all the data files")
 
-    group.add_argument('--input-data-sizes-file', type=str, default='sizes.txt',
-                       help='the filename containing all the shards sizes')
+    group.add_argument('--input-data-sizes-file', type=str, default='sizes.txt', help='the filename containing all the shards sizes')
 
     group.add_argument('--delim', default=',', help='delimiter used to parse csv data files')
     group.add_argument('--text-key', default='sentence', help='key to use to extract text from json/csv')
@@ -252,41 +194,23 @@ def add_data_args(parser):
     group.add_argument('--no-lazy-loader', action='store_true', help='whether to lazy read the data set')
     group.add_argument('--half-lazy-loader', action='store_true')
     group.add_argument('--loader-scatter', type=int, default=None, help='Number of scatters to use for dataloaders')
-    group.add_argument('--loose-json', action='store_true',
-                       help='Use loose json (one json-formatted string per newline), instead of tight json (data file is one '
-                            'json string)')
-    group.add_argument('--presplit-sentences', action='store_true',
-                       help='Dataset content consists of documents where each document consists of newline separated sentences')
+    group.add_argument('--loose-json', action='store_true', help='Use loose json (one json-formatted string per newline), instead of tight json (data file is one json string)')
+    group.add_argument('--presplit-sentences', action='store_true', help='Dataset content consists of documents where each document consists of newline separated sentences')
     group.add_argument('--num-workers', type=int, default=2, help="""Number of workers to use for dataloading""")
-    group.add_argument('--tokenizer-model-type', type=str,
-                       default=None,
-                       help="Model type to use for sentencepiece tokenization \
-                       (one of ['bpe', 'char', 'unigram', 'word']) or \
-                       bert vocab to use for BertWordPieceTokenizer (one of \
-                       ['bert-large-uncased', 'bert-large-cased', etc.])")
-    group.add_argument('--tokenizer-path', type=str, default='tokenizer.model',
-                       help='path used to save/load sentencepiece tokenization models')
-    group.add_argument('--tokenizer-type', type=str,
-                       default='BertWordPieceTokenizer',
-                       choices=['CharacterLevelTokenizer',
-                                'SentencePieceTokenizer',
-                                'BertWordPieceTokenizer',
-                                'GPT2BPETokenizer',
-                                'ChineseSPTokenizer'],
-                       help='what type of tokenizer to use')
+    group.add_argument('--tokenizer-model-type', type=str, default=None, help="Model type to use for sentencepiece tokenization (one of ['bpe', 'char', 'unigram', 'word']) or bert vocab to use for BertWordPieceTokenizer (one of ['bert-large-uncased', 'bert-large-cased', etc.])")
+    group.add_argument('--tokenizer-path', type=str, default='tokenizer.model', help='path used to save/load sentencepiece tokenization models')
+    group.add_argument('--tokenizer-type', type=str, default='BertWordPieceTokenizer', choices=['CharacterLevelTokenizer',
+                                                                                                'SentencePieceTokenizer',
+                                                                                                'BertWordPieceTokenizer',
+                                                                                                'GPT2BPETokenizer',
+                                                                                                'ChineseSPTokenizer'], help='what type of tokenizer to use')
     group.add_argument('--fix-command-token', action='store_true')
     group.add_argument('--no-pre-tokenize', action='store_true')
     group.add_argument("--cache-dir", default=None, type=str, help="Where to store pre-trained BERT downloads")
-    group.add_argument('--use-tfrecords', action='store_true',
-                       help='load `--train-data`, `--valid-data`, '
-                            '`--test-data` from BERT tf records instead of '
-                            'normal data pipeline')
+    group.add_argument('--use-tfrecords', action='store_true', help='load `--train-data`, `--valid-data`, `--test-data` from BERT tf records instead of normal data pipeline')
     group.add_argument('--seq-length', type=int, default=512, help="Maximum sequence length to process")
     group.add_argument('--mem-length', type=int, default=0, help="The memory length to preserve")
-    group.add_argument('--max-preds-per-seq', type=int, default=None,
-                       help='Maximum number of predictions to use per sequence. '
-                            'Defaults to math.ceil(`--seq-length`*.15/10)*10. '
-                            'MUST BE SPECIFIED IF `--use-tfrecords` is True.')
+    group.add_argument('--max-preds-per-seq', type=int, default=None, help='Maximum number of predictions to use per sequence. Defaults to math.ceil(`--seq-length`*.15/10)*10. MUST BE SPECIFIED IF `--use-tfrecords` is True.')
     group.add_argument('--non-sentence-start', type=float, default=0.0)
     group.add_argument('--sample-one-document', action='store_true', help='only sample one document in one sample')
     group.add_argument('--load-splits', type=str, default=None, help="The path to load split indices from")
@@ -303,18 +227,15 @@ def add_finetune_config_args(parser):
     group = parser.add_argument_group('finetune', 'finetune configurations')
     group.add_argument('--task', type=str, help='Task name.')
     group.add_argument('--load-pretrained', type=str, help="Load pretrained model", default=None)
-    group.add_argument('--pool-token', type=str, choices=['start', 'pad', 'cls'],
-                       help='The token to pool the sequence representation', default='cls')
+    group.add_argument('--pool-token', type=str, choices=['start', 'pad', 'cls'], help='The token to pool the sequence representation', default='cls')
     group.add_argument('--cloze-eval', action='store_true', help='Evaluation dataset with cloze task')
     group.add_argument('--multi-token', action='store_true', help='Use multi token for cloze evaluation')
     group.add_argument('--segment-length', type=int, default=0, help="The maximum segment length for cloze evaluation")
-    group.add_argument('--loss-func', type=str, choices=["cross_entropy", "hinge", "generative", "mix"],
-                       default="cross_entropy")
+    group.add_argument('--loss-func', type=str, choices=["cross_entropy", "hinge", "generative", "mix"], default="cross_entropy")
     group.add_argument('--block-lm-ratio', type=float, default=0.0)
     group.add_argument('--adapet', action='store_true', help="Use the decoupled cross entropy loss in AdaPET")
     group.add_argument('--pattern-id', type=int, default=0)
-    group.add_argument('--fast-decode', action='store_true',
-                       help="Fast decode for multi-token cloze. Can only be used without checkpoint activation.")
+    group.add_argument('--fast-decode', action='store_true', help="Fast decode for multi-token cloze. Can only be used without checkpoint activation.")
     group.add_argument('--few-superglue', action='store_true')
     group.add_argument('--eval-valid', action='store_true', help="Whether evaluate on the valid set")
     group.add_argument('--validation-metric', type=str, default=None)
@@ -380,8 +301,7 @@ def get_args():
 
     args.model_parallel_size = min(args.model_parallel_size, args.world_size)
     if args.rank == 0:
-        print('using world size: {} and model-parallel size: {} '.format(
-            args.world_size, args.model_parallel_size))
+        print('using world size: {} and model-parallel size: {} '.format(args.world_size, args.model_parallel_size))
 
     args.dynamic_loss_scale = False
     if args.loss_scale is None:
@@ -437,10 +357,5 @@ def mpi_define_env(args):
     os.environ['MASTER_ADDR'] = master_addr
     os.environ['MASTER_PORT'] = "29500"  # TORCH_DISTRIBUTED_DEFAULT_PORT = 29500
 
-    print(
-        "Discovered MPI settings of world_rank={}, local_rank={}, world_size={}, master_addr={}, master_port={}"
-        .format(os.environ['RANK'],
-                args.local_rank,
-                os.environ['WORLD_SIZE'],
-                os.environ['MASTER_ADDR'],
-                os.environ['MASTER_PORT']))
+    print("Discovered MPI settings of world_rank={}, local_rank={}, world_size={}, master_addr={}, master_port={}"
+          .format(os.environ['RANK'], args.local_rank, os.environ['WORLD_SIZE'], os.environ['MASTER_ADDR'], os.environ['MASTER_PORT']))
