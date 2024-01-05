@@ -48,7 +48,7 @@
 				"type": "python",
 				"request": "launch",
 				"program": "${workspaceFolder:GLM-main}/debug/debug_glm.py",
-                "justMyCode": false
+                "justMyCode": true
 			},
             {
 				"name": "debug_generation.py",
