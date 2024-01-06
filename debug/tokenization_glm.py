@@ -142,54 +142,64 @@ class GLMTokenizerMixin:
         return GLMBatchEncoding(inputs)
 
     def build_inputs_for_generation(self, model_input: BatchEncoding, max_gen_length=512, targets=None, padding=False):
-        mask_ids = self.mask_token_ids
+        
         input_ids = model_input.input_ids
         batch_size, seq_length = input_ids.shape[:2]
-        position_id, block_position_id = list(range(seq_length)), [0 for _ in range(seq_length)]
-        position_ids, block_position_ids = [], []
+        
+        # 构造labels
         labels = None
-        if targets is not None:
+        if targets is not None: # 如果是训练
             is_batched = isinstance(targets, (list, tuple))
             targets = self(targets, add_special_tokens=False, padding=False).input_ids
             if not is_batched:
                 targets = [targets]
             assert len(targets) == len(input_ids)
-            targets = [(target + [self.eop_token_id])[:max_gen_length] for target in targets]
+            targets = [(target + [self.eop_token_id])[:max_gen_length] for target in targets] # <|endofpiece|> 对应 50258。最大生成的长度就是max_gen_length，多了直接截断了。
             if not padding:
-                max_gen_length = max(map(len, targets))
-            targets = [[self.sop_token_id] + target for target in targets]
-            labels = [target[1:] for target in targets]
-            targets = [target + [self.pad_token_id] * (max_gen_length + 1 - len(target)) for target in targets]
-            labels = [label + [-100] * (max_gen_length - len(label)) for label in labels]
-            targets = torch.tensor(targets, dtype=input_ids.dtype, device=input_ids.device)
+                max_gen_length = max(map(len, targets)) #如果不填充，直接tagets中最大做对齐。
+            targets = [[self.sop_token_id] + target for target in targets] # 给每个目标加个开始token <|startofpiece|>
+            labels = [target[1:] for target in targets] # 作为训练label，是targets下一个时刻，所以往后一个。
+            targets = [target + [self.pad_token_id] * (max_gen_length + 1 - len(target)) for target in targets] # target 按照最大长度 对齐
+            labels = [label + [-100] * (max_gen_length - len(label)) for label in labels] # labels 按最大长度 对齐，添加-100忽略计算的loss的位置
+            targets = torch.tensor(targets, dtype=input_ids.dtype, device=input_ids.device) # 在论文中 targets 对应的是 Part B，中所有的 piece 
             labels = torch.tensor(labels, dtype=input_ids.dtype, device=input_ids.device)
-            labels = torch.cat((input_ids.new_full((batch_size, seq_length), -100), labels), dim=1)
+            labels = torch.cat((input_ids.new_full((batch_size, seq_length), -100), labels), dim=1) # 前面input_ids对应位置上是不用计算loss的
+        
+        # 构造paper中 Position1 Position2
+        position_ids, block_position_ids = [], [] # position_ids 是 论文中的 Position1 , block_position_ids 是 Position2
+        mask_ids = self.mask_token_ids # 第一个是[MASK]的id，第二个是[sMASK]的id，第三个是[gMASK]的id, 值为 [50260, 50264, 50263]
+        position_id, block_position_id = list(range(seq_length)), [0 for _ in range(seq_length)]
         for i in range(batch_size):
             mask_positions = []
-            for mask_id in mask_ids:
+            for mask_id in mask_ids: #  找到input_ids中所有的 [MASK], [sMASK], [gMASK] 的位置。
                 mask_positions += (input_ids[i] == mask_id).nonzero(as_tuple=True)[0].tolist()
             if not mask_positions:
                 raise ValueError("Cannot find mask token in the input")
-            mask_positions.sort()
+            mask_positions.sort() # 这里做排序，是为了下面拿到第一次出现[MASK]的位置
             mask_pos = mask_positions[0]
-            position_ids.append(position_id + [mask_pos] * max_gen_length)
-            block_position_ids.append(block_position_id + list(range(1, max_gen_length + 1)))
+            position_ids.append(position_id + [mask_pos] * max_gen_length) # 把所有的mask，以max_gen_length固定长度，拼到position_id 后面。
+            block_position_ids.append(block_position_id + list(range(1, max_gen_length + 1))) # 
         position_ids = torch.tensor(position_ids, dtype=input_ids.dtype, device=input_ids.device)
         block_position_ids = torch.tensor(block_position_ids, dtype=input_ids.dtype, device=input_ids.device)
-        position_ids = torch.stack((position_ids, block_position_ids), dim=1)
+        position_ids = torch.stack((position_ids, block_position_ids), dim=1) #  论文中把 Position1 与 Position2 堆到一起。[b, [Postion1, Postion2]]
+        
+        
+        # 构造attention mask
         attention_mask = model_input.attention_mask
         attention_mask = attention_mask.unsqueeze(1).expand(-1, seq_length + max_gen_length, -1)
         attention_mask_zeros = attention_mask.new_zeros((seq_length, max_gen_length))
         attention_mask_ones_triled = torch.tril(attention_mask.new_ones((max_gen_length, max_gen_length)))
-        generation_attention_mask = torch.cat([attention_mask_zeros, attention_mask_ones_triled], dim=0).unsqueeze(0).expand(batch_size, -1, -1)
+        generation_attention_mask = torch.cat([attention_mask_zeros, attention_mask_ones_triled], dim=0).unsqueeze(0).expand(batch_size, -1, -1) # 这个是生成部分mask
         attention_mask = torch.cat((attention_mask, generation_attention_mask), dim=2)
         attention_mask = attention_mask.unsqueeze(1)
-        if targets is None:
+        
+        # 打包成模型输入。
+        if targets is None: # 推理
             input_ids = torch.cat((input_ids, input_ids.new_full((batch_size, 1), self.sop_token_id)), dim=-1)
         else:
-            input_ids = torch.cat((input_ids, targets[:, :-1]), dim=1)
-        batch = {"input_ids": input_ids, "position_ids": position_ids}
-        if labels is None:
+            input_ids = torch.cat((input_ids, targets[:, :-1]), dim=1) # 将 input_ids 与 targets 拼起来，作为模型的输入。
+        batch = {"input_ids": input_ids, "position_ids": position_ids} 
+        if labels is None: # 推理
             batch["generation_attention_mask"] = attention_mask
         else:
             batch["attention_mask"] = attention_mask
