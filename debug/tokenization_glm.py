@@ -86,8 +86,7 @@ class GLMTokenizerMixin:
         choice_ids, choice_indices = [], []
 
         for choice_str in choices:
-            choice = torch.tensor(self(choice_str, add_special_tokens=False, padding=False)['input_ids'],
-                                  dtype=torch.long)
+            choice = torch.tensor(self(choice_str, add_special_tokens=False, padding=False)['input_ids'], dtype=torch.long)
             choice_ids.append(choice)
             choice_indices.append(torch.arange(len(token), len(token) + len(choice), dtype=torch.long))
             attention_mask.append(torch.tril(torch.ones((len(choice), len(choice)), dtype=torch.long)))
@@ -109,10 +108,7 @@ class GLMTokenizerMixin:
 
     def _pad_batch(self, tokens, position_ids, attention_mask, max_seq_length):
         pad_length = max_seq_length - len(tokens)
-        attention_mask = torch.nn.functional.pad(attention_mask,
-                                                 (0, pad_length, 0, pad_length),
-                                                 mode="constant",
-                                                 value=0)
+        attention_mask = torch.nn.functional.pad(attention_mask, (0, pad_length, 0, pad_length), mode="constant", value=0)
         tokens = torch.cat((tokens, torch.zeros(pad_length, dtype=torch.long)))
         position_ids = torch.cat((position_ids, position_ids[..., -1:].expand(-1, pad_length)), dim=-1)
         return tokens, position_ids, attention_mask
@@ -125,10 +121,7 @@ class GLMTokenizerMixin:
         choices_batch, choice_target_ids_batch = [], []
 
         for sample in samples:
-            token, position_id, attention_mask = self._pad_batch(sample["input_ids"],
-                                                                 sample["position_ids"],
-                                                                 sample["attention_mask"],
-                                                                 length_to_pad)
+            token, position_id, attention_mask = self._pad_batch(sample["input_ids"], sample["position_ids"], sample["attention_mask"], length_to_pad)
             token_batch.append(token)
             position_id_batch.append(position_id)
             attention_mask_batch.append(attention_mask)
@@ -186,7 +179,9 @@ class GLMTokenizerMixin:
         position_ids = torch.stack((position_ids, block_position_ids), dim=1)
         attention_mask = model_input.attention_mask
         attention_mask = attention_mask.unsqueeze(1).expand(-1, seq_length + max_gen_length, -1)
-        generation_attention_mask = torch.cat([attention_mask.new_zeros((seq_length, max_gen_length)), torch.tril(attention_mask.new_ones((max_gen_length, max_gen_length)))], dim=0).unsqueeze(0).expand(batch_size, -1, -1)
+        attention_mask_zeros = attention_mask.new_zeros((seq_length, max_gen_length))
+        attention_mask_ones_triled = torch.tril(attention_mask.new_ones((max_gen_length, max_gen_length)))
+        generation_attention_mask = torch.cat([attention_mask_zeros, attention_mask_ones_triled], dim=0).unsqueeze(0).expand(batch_size, -1, -1)
         attention_mask = torch.cat((attention_mask, generation_attention_mask), dim=2)
         attention_mask = attention_mask.unsqueeze(1)
         if targets is None:
@@ -269,9 +264,7 @@ class GLMChineseTokenizer(PreTrainedTokenizer, GLMTokenizerMixin):
 
         return (out_vocab_file,)
 
-    def build_inputs_with_special_tokens(self,
-                                         token_ids_0: List[int],
-                                         token_ids_1: Optional[List[int]] = None) -> List[int]:
+    def build_inputs_with_special_tokens(self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None) -> List[int]:
         """
         Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
         adding special tokens. A BERT sequence has the following format:
@@ -298,9 +291,7 @@ class GLMGPT2Tokenizer(GPT2Tokenizer, GLMTokenizerMixin):
     model_input_names = ["input_ids", "position_ids", "attention_mask"]
     truncation_side: str = "left"
 
-    def build_inputs_with_special_tokens(self,
-                                         token_ids_0: List[int],
-                                         token_ids_1: Optional[List[int]] = None) -> List[int]:
+    def build_inputs_with_special_tokens(self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None) -> List[int]:
         """
         Build model inputs from a sequence or a pair of sequence for sequence classification tasks by concatenating and
         adding special tokens. A BERT sequence has the following format:
