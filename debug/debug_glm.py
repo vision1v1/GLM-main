@@ -57,6 +57,27 @@ def debug_model_forward():
     logits = outputs.logits
     print("loss = ", loss, "logits = ", logits, sep='\n', end='\n\n')
 
+def debug_model_forward_small():
+    """
+    调试一个small版本的
+    """
+    # 构造模型
+    config = GLMConfig.from_pretrained(glm2b_path)
+    config.num_layers = 2 # 方便调试
+    model = GLMForConditionalGeneration(config)
+    model.train()
+    
+    # 模型输入
+    tokenizer:GLMGPT2Tokenizer = GLMGPT2Tokenizer.from_pretrained(glm2b_path)
+    inputs = tokenizer(train_data, return_tensors="pt", padding=True)
+    inputs = tokenizer.build_inputs_for_generation(inputs, targets=["Beijing", "No"], max_gen_length=8, padding=False)
+
+    # 一次前向传播
+    outputs = model.forward(**inputs)
+    loss = outputs.loss
+    logits = outputs.logits
+    print("loss = ", loss, "logits = ", logits, sep='\n', end='\n\n')
+
 
 def debug_model_inferance():
     """
@@ -81,6 +102,7 @@ def debug_model_inferance():
 if __name__ == "__main__":
     # debug_tokenizer()
     # debug_config()
-    debug_model_forward()
+    # debug_model_forward()
+    debug_model_forward_small()
     # debug_model_inferance()
     ...
