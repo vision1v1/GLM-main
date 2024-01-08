@@ -409,7 +409,7 @@ class GLMBlock(torch.nn.Module):
 
         # Layer norm at the begining of the transformer layer.
         layernorm_output = self.input_layernorm.forward(hidden_states)
-        mem = self.input_layernorm.forward(mem) if mem is not None else None # TODO mem?
+        mem = self.input_layernorm.forward(mem) if mem is not None else None  # TODO mem?
         # Self attention.
         attention_output = self.attention.forward(layernorm_output, ltor_mask, mem)
         # Residual connection.
@@ -521,7 +521,7 @@ class GLMStack(torch.nn.Module):
         # attention mask is the beginning postion of B region, \in [0, query_len)
         is_scalar = torch.numel(attention_mask) == 1
         is_sep = is_scalar or torch.numel(attention_mask) == batch_size
-        if is_sep: # TODO ?
+        if is_sep:  # TODO ?
             sep = attention_mask.item() if is_scalar else attention_mask
 
             # conventional transformer
@@ -560,7 +560,7 @@ class GLMStack(torch.nn.Module):
         def check_detach(_hidden_states):
             return _hidden_states.detach()
 
-        mem_layers = [check_detach(hidden_states)] # 记录 所有的 hidden_states
+        mem_layers = [check_detach(hidden_states)]  # 记录 所有的 hidden_states
 
         for i, layer in enumerate(self.layers):
 
@@ -575,7 +575,7 @@ class GLMStack(torch.nn.Module):
 
             mem_i = memory_states[i] if memory_states else None
 
-            if self.checkpoint_activations: # TODO
+            if self.checkpoint_activations:  # TODO
                 hidden_states = torch.utils.checkpoint.checkpoint(create_custom_forward(layer),
                                                                   hidden_states,
                                                                   mem=mem_i)
