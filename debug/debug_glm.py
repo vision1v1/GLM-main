@@ -48,8 +48,8 @@ def debug_model_forward():
     inputs = tokenizer.build_inputs_for_generation(inputs, targets=["Beijing", "No"], max_gen_length=8, padding=False)
 
     # 移动到相同的设备上。
-    # inputs = inputs.to('cuda') # 移动到gpu上。
-    # model = model.half().cuda() # 移动到gpu上。可以使用半精度进一步降低显存使用，注意了：half() 在cpu上不支持。
+    inputs = inputs.to('cuda') # 移动到gpu上。
+    model = model.half().cuda() # 移动到gpu上。可以使用半精度进一步降低显存使用，注意了：half() 在cpu上不支持。
 
     # 一次前向传播
     outputs = model.forward(**inputs)
@@ -79,8 +79,8 @@ def debug_model_inferance():
 
 
 if __name__ == "__main__":
-    debug_tokenizer()
+    # debug_tokenizer()
     # debug_config()
-    # debug_model_forward()
+    debug_model_forward()
     # debug_model_inferance()
     ...

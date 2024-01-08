@@ -409,7 +409,7 @@ class GLMBlock(torch.nn.Module):
 
         # Layer norm at the begining of the transformer layer.
         layernorm_output = self.input_layernorm.forward(hidden_states)
-        mem = self.input_layernorm.forward(mem) if mem is not None else None
+        mem = self.input_layernorm.forward(mem) if mem is not None else None # TODO mem?
         # Self attention.
         attention_output = self.attention.forward(layernorm_output, ltor_mask, mem)
         # Residual connection.
@@ -521,7 +521,7 @@ class GLMStack(torch.nn.Module):
         # attention mask is the beginning postion of B region, \in [0, query_len)
         is_scalar = torch.numel(attention_mask) == 1
         is_sep = is_scalar or torch.numel(attention_mask) == batch_size
-        if is_sep:
+        if is_sep: # TODO ?
             sep = attention_mask.item() if is_scalar else attention_mask
 
             # conventional transformer
@@ -560,7 +560,7 @@ class GLMStack(torch.nn.Module):
         def check_detach(_hidden_states):
             return _hidden_states.detach()
 
-        mem_layers = [check_detach(hidden_states)]
+        mem_layers = [check_detach(hidden_states)] # 记录 所有的 hidden_states
 
         for i, layer in enumerate(self.layers):
 
@@ -575,7 +575,7 @@ class GLMStack(torch.nn.Module):
 
             mem_i = memory_states[i] if memory_states else None
 
-            if self.checkpoint_activations:
+            if self.checkpoint_activations: # TODO
                 hidden_states = torch.utils.checkpoint.checkpoint(create_custom_forward(layer),
                                                                   hidden_states,
                                                                   mem=mem_i)
@@ -742,12 +742,7 @@ class GLMModel(GLMPreTrainedModel):
                                 checkpoint=_CHECKPOINT_FOR_DOC,
                                 output_type=BaseModelOutputWithPastAndCrossAttentions,
                                 config_class=_CONFIG_FOR_DOC)
-    def forward(self,
-                input_ids=None,
-                position_ids=None,
-                attention_mask=None,
-                mems=None,
-                **kwargs):
+    def forward(self, input_ids=None, position_ids=None, attention_mask=None, mems=None, **kwargs):
         batch_size = input_ids.size(0)
         words_embeddings = self.word_embeddings.forward(input_ids)
         embeddings = words_embeddings
@@ -768,9 +763,7 @@ class GLMModel(GLMPreTrainedModel):
         if self.output_predict:
             logits = F.linear(last_hidden_states, self.word_embeddings.weight)
 
-        return ModelOutput(last_hidden_states=last_hidden_states,
-                           logits=logits,
-                           mems=mems)
+        return ModelOutput(last_hidden_states=last_hidden_states, logits=logits, mems=mems)
 
 
 @add_start_docstrings("""GLM Model transformer for multiple choice classification""", GLM_START_DOCSTRING)
@@ -859,27 +852,18 @@ class GLMForConditionalGeneration(GLMPreTrainedModel):
             "mems": past,
         }
 
-    def forward(self,
-                input_ids=None,
-                position_ids=None,
-                attention_mask=None,
-                labels=None,
-                mems=None,
-                **kwargs):
+    def forward(self, input_ids=None, position_ids=None, attention_mask=None, labels=None, mems=None, **kwargs):
         model_output = self.glm.forward(input_ids, position_ids, attention_mask, mems=mems, **kwargs)
         lm_logits = model_output.logits
         loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss(ignore_index=-100)
             loss = loss_fct(lm_logits.view(-1, lm_logits.size(-1)), labels.view(-1))
-        return ModelOutput(loss=loss,
-                           logits=lm_logits,
-                           mems=model_output.mems)
+        return ModelOutput(loss=loss, logits=lm_logits, mems=model_output.mems)
 
 
 @add_start_docstrings(
-    """GLM Model transformer with a sequence classification/regression head on top (a linear layer on top of
-    the pooled output) e.g. for GLUE tasks. """,
+    """GLM Model transformer with a sequence classification/regression head on top (a linear layer on top of the pooled output) e.g. for GLUE tasks. """,
     GLM_START_DOCSTRING,
 )
 class GLMForSequenceClassification(GLMPreTrainedModel):
@@ -905,14 +889,9 @@ class GLMForSequenceClassification(GLMPreTrainedModel):
         output_type=SequenceClassifierOutput,
         config_class=_CONFIG_FOR_DOC,
     )
-    def forward(self,
-                input_ids=None,
-                position_ids=None,
-                attention_mask=None,
-                labels=None):
+    def forward(self, input_ids=None, position_ids=None, attention_mask=None, labels=None):
 
         num_choices = None
-
         if len(input_ids.shape) == 3:
             batch_size, num_choices = input_ids.shape[:2]
             input_ids = input_ids.reshape(-1, input_ids.size(-1))
@@ -933,6 +912,4 @@ class GLMForSequenceClassification(GLMPreTrainedModel):
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(logits, labels)
         # loss = F.cross_entropy(logits.contiguous().float(), labels.long())
-        return SequenceClassifierOutput(loss=loss,
-                                        logits=logits,
-                                        hidden_states=outputs)
+        return SequenceClassifierOutput(loss=loss, logits=logits, hidden_states=outputs)
