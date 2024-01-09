@@ -267,24 +267,24 @@ class SelfAttention(torch.nn.Module):
 
     def _transpose_for_scores(self, tensor):
         """Transpose a 3D tensor [b, s, np*hn] into a 4D tensor with
-        size [b, np, s, hn].
+        size [b, np, s, hn]. 
         """
-        new_tensor_shape = tensor.size()[:-1] + (self.num_attention_heads, self.hidden_size_per_attention_head)
+        new_tensor_shape = tensor.size()[:-1] + (self.num_attention_heads, self.hidden_size_per_attention_head) # [b, s, n, hn] = [2, 18, 32, 64]
         tensor = tensor.view(*new_tensor_shape)
-        return tensor.permute(0, 2, 1, 3)
+        return tensor.permute(0, 2, 1, 3) # [b,n,s,hn]
 
     def forward(self, hidden_states, ltor_mask, mem=None):
-        # hidden_states: [b, s, h]
-        # ltor_mask: [b,1,s,s]
+        # hidden_states: [b, s, h] [2, 18, 2048]
+        # ltor_mask: [b,1,s,s] [2,1,18,18]
 
         # Attention heads. [b, s, hp]
         query_length = hidden_states.size(1)
         # self attention
         if mem is None:
-            mixed_x_layer = self.query_key_value(hidden_states)
-            (mixed_query_layer,
+            mixed_x_layer = self.query_key_value(hidden_states) # q,k,v一起投射，高效计算。 [b, s, h*3], [2, 18, 6144] 
+            (mixed_query_layer, # [2,18,2048]
              mixed_key_layer,
-             mixed_value_layer) = split_tensor_along_last_dim(mixed_x_layer, 3)
+             mixed_value_layer) = split_tensor_along_last_dim(mixed_x_layer, 3) # 在拆分出来 q,k,v
         else:
             cat = torch.cat((mem, hidden_states), 1)
             mixed_x_layer = self.query_key_value(cat)
@@ -314,7 +314,7 @@ class SelfAttention(torch.nn.Module):
             attention_scores -= max_attention_scores
             attention_scores *= self.attention_scale
 
-        attention_scores = attention_scores + (-65504.0) * (1.0 - ltor_mask)
+        attention_scores = attention_scores + (-65504.0) * (1.0 - ltor_mask) # 被遮掩的位置上，加上一个绝对值大负数，使得下面softmax往小的拉
         # Attention probabilities. [b, np, s, s]
         attention_probs = torch.nn.Softmax(dim=-1)(attention_scores)
         # This is actually dropping out entire tokens to attend to, which might
@@ -796,10 +796,7 @@ class GLMForMultipleChoice(GLMPreTrainedModel):
         if labels is not None:
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(log_probs, labels)
-        return ModelOutput(loss=loss,
-                           logits=log_probs,
-                           lm_logits=lm_logits,
-                           mems=model_output.mems)
+        return ModelOutput(loss=loss, logits=log_probs, lm_logits=lm_logits, mems=model_output.mems)
 
 
 @add_start_docstrings("""GLM Model transformer with a `language modeling` head on top""", GLM_START_DOCSTRING)
