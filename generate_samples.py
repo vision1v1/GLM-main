@@ -213,7 +213,8 @@ def read_context(tokenizer, args, output):
         context_length = 0
 
     terminate_runs_tensor = torch.cuda.LongTensor([terminate_runs])
-    torch.distributed.broadcast(terminate_runs_tensor, mpu.get_model_parallel_src_rank(),
+    torch.distributed.broadcast(terminate_runs_tensor, 
+                                mpu.get_model_parallel_src_rank(),
                                 group=mpu.get_model_parallel_group())
     terminate_runs = terminate_runs_tensor[0].item()
 
@@ -222,14 +223,16 @@ def read_context(tokenizer, args, output):
 
     context_length_tensor = torch.cuda.LongTensor([context_length])
 
-    torch.distributed.broadcast(context_length_tensor, mpu.get_model_parallel_src_rank(),
+    torch.distributed.broadcast(context_length_tensor, 
+                                mpu.get_model_parallel_src_rank(),
                                 group=mpu.get_model_parallel_group())
     context_length = context_length_tensor[0].item()
     if mpu.get_model_parallel_rank() == 0:
         context_tokens_tensor = torch.cuda.LongTensor(context_tokens)
     else:
         context_tokens_tensor = torch.cuda.LongTensor([0] * context_length)
-    torch.distributed.broadcast(context_tokens_tensor, mpu.get_model_parallel_src_rank(),
+    torch.distributed.broadcast(context_tokens_tensor, 
+                                mpu.get_model_parallel_src_rank(),
                                 group=mpu.get_model_parallel_group())
     if mpu.get_model_parallel_rank() != 0:
         raw_text = tokenizer.DecodeIds(context_tokens_tensor.tolist())
