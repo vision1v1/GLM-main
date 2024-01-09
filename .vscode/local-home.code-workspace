@@ -5,8 +5,12 @@
             "path": ".."
         },
         {
-            "name": "THUDM",
-            "path": "d:/data/pretrained/THUDM"
+            "name": "gpt2",
+            "path": "d:/data/pretrained/gpt2"
+        },
+        {
+            "name": "glm-2b",
+            "path": "d:/data/pretrained/THUDM/glm-2b"
         },
         {
             "name": "transformers_modules",
@@ -39,6 +43,13 @@
     "launch": {
         "version": "0.2.0",
         "configurations": [
+            {
+				"name": "debug_gpt2.py",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder:GLM-main}/debug/debug_gpt2.py",
+                "justMyCode": false
+			},
             {
 				"name": "debug_glm.py",
 				"type": "python",
