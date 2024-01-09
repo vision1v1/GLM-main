@@ -38,8 +38,10 @@ def debug_training():
     # Training
     model.train()
     train_data = ["Tsinghua University is located in [MASK].", "One minus one equals zero, is it correct? Answer: [MASK]"]
+    targets = ["Beijing", "No"]
+    
     inputs = tokenizer(train_data, return_tensors="pt", padding=True)
-    inputs = tokenizer.build_inputs_for_generation(inputs, targets=["Beijing", "No"], max_gen_length=8, padding=False)
+    inputs = tokenizer.build_inputs_for_generation(inputs, targets=targets, max_gen_length=8, padding=False)
     inputs = inputs.to('cuda')
     outputs = model(**inputs)
     loss = outputs.loss
