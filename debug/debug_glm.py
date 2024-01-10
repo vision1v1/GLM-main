@@ -6,11 +6,50 @@ from tokenization_glm import GLMGPT2Tokenizer, GLMBatchEncoding
 from configuration_glm import GLMConfig
 from modeling_glm import GLMPreTrainedModel, GLMForConditionalGeneration
 from transformers.tokenization_utils_base import BatchEncoding
+from transformers.tokenization_utils import Trie
 
 torch.set_printoptions(linewidth=500)  # 方便阅读
 
 glm2b_path = os.path.join(os.getenv('my_data_dir'), "pretrained", "THUDM", "glm-2b")
 glm10b_path = os.path.join(os.getenv('my_data_dir'), "pretrained", "THUDM", "glm-10b")
+
+
+def debug_trie():
+    """
+    测试前缀树。https://en.wikipedia.org/wiki/Trie
+    """
+    trie = Trie()
+    trie.add("Hello 友達")
+    print(trie.data)
+
+    trie.add("Hello")
+    print(trie.data)
+
+    
+    trie = Trie()
+    text = "[CLS] This is a extra_id_100"
+    output = trie.split(text)
+    print(output)
+
+    trie.add("[CLS]") # 添加一个词 "[CLS]"
+    trie.add("extra_id_1") # 添加一个词 "extra_id_1"
+    trie.add("extra_id_100") # 添加一个词 "extra_id_100"，注意这个词的前缀"extra_id_1"也是一个词。
+    # 切分按照，最长前缀切分
+    output = trie.split(text)
+    print(output)
+    ...
+
+
+def debug_token_cut():
+    """
+    调试 glm 的分词， glm 使用的是 gpt2的分词。
+    """
+    text = "Tsinghua University is located in [MASK]."
+
+    tokenizer: GLMGPT2Tokenizer = GLMGPT2Tokenizer.from_pretrained(glm2b_path)
+    output = tokenizer.tokenize(text=text)
+    print(output)
+
 
 def debug_tokenizer():
     """
@@ -21,11 +60,21 @@ def debug_tokenizer():
     targets = ["Beijing", "No"]
 
     tokenizer: GLMGPT2Tokenizer = GLMGPT2Tokenizer.from_pretrained(glm2b_path)
-    inputs: BatchEncoding = tokenizer(train_data, return_tensors="pt", padding=True)  # build_inputs_with_special_tokens
+    inputs_pt: BatchEncoding = tokenizer(train_data, return_tensors="pt", padding=True)  # build_inputs_with_special_tokens
 
+    # 
     print("tokenized = ")
-    for key, value in inputs.items():
+    for key, value in inputs_pt.items():
         print(key, value, sep='\n', end='\n\n')
+
+    # 句子开始  '[CLS]' 50259
+    # 句子结束/填充 '<|endoftext|>' 50256  
+    # 遮掩 '[MASK]' 50260
+        
+    input_ids_batched = tokenizer(train_data, padding=True)['input_ids']
+    for input_ids in input_ids_batched:
+        print("input_ids", input_ids, "input_tokens", tokenizer.convert_ids_to_tokens(input_ids), sep='\n', end='\n\n')
+
     
 def debug_gen_inputs():
     """
@@ -149,7 +198,9 @@ def debug_cls_inputs():
     ...
 
 if __name__ == "__main__":
-    debug_tokenizer()
+    # debug_trie()
+    debug_token_cut()
+    # debug_tokenizer()
 
     # debug_gen_inputs()
     # debug_config()
