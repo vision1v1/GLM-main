@@ -1,6 +1,7 @@
 import os
 import torch
-from transformers import GPT2Tokenizer, GPT2Model
+from tokenization_gpt2 import GPT2Tokenizer
+from modeling_gpt2 import GPT2Model
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 
 torch.set_printoptions(linewidth=500)  # 方便阅读
