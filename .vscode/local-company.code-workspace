@@ -56,7 +56,14 @@
 				"type": "python",
 				"request": "launch",
 				"program": "${workspaceFolder:GLM-main}/debug/debug_glm.py",
-                "justMyCode": true
+                "justMyCode": false
+			},
+            {
+				"name": "debug_gpt2.py",
+				"type": "python",
+				"request": "launch",
+				"program": "${workspaceFolder:GLM-main}/debug/debug_gpt2.py",
+                "justMyCode": false
 			},
             {
 				"name": "debug_generation.py",
