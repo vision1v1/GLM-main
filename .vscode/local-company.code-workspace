@@ -5,8 +5,16 @@
             "path": ".."
         },
         {
-            "name": "THUDM",
-            "path": "C:/data/pretrained/THUDM"
+            "name": "gpt2",
+            "path": "C:/data/pretrained/gpt2"
+        },
+        {
+            "name": "glm-2b",
+            "path": "C:/data/pretrained/THUDM/glm-2b"
+        },
+        {
+            "name": "glm-10b",
+            "path": "C:/data/pretrained/THUDM/glm-10b"
         },
         {
             "name": "transformers_modules",
