@@ -7,8 +7,30 @@ torch.set_printoptions(linewidth=500)  # 方便阅读
 
 gpt2_path = os.path.join(os.getenv('my_data_dir'), "pretrained", "gpt2")
 
+
+def debug_bpe():
+    """
+    调试 gpt2 的bpe
+    """
+    tokenizer:GPT2Tokenizer = GPT2Tokenizer.from_pretrained(gpt2_path)
+    token = 'Tsinghua'
+    output = tokenizer.bpe(token)
+    print(output)
+
+
+def debug_tokenize():
+    """
+    分析 gpt2 的分词
+    """
+    text = "Tsinghua University is located in"
+    tokenizer:GPT2Tokenizer = GPT2Tokenizer.from_pretrained(gpt2_path)
+    output = tokenizer.tokenize(text=text)
+    print(output)
+
+
 def debug_tokenizer():
-    text = "Replace me by any text you'd like."
+    # text = "Replace me by any text you'd like."
+    text = "Tsinghua University is located in [MASK]."
     tokenizer:GPT2Tokenizer = GPT2Tokenizer.from_pretrained(gpt2_path)
     # encoded_input = tokenizer(text, return_tensors='pt')
     encoded_input = tokenizer(text)
@@ -18,6 +40,7 @@ def debug_tokenizer():
 
     input_tokens = tokenizer.convert_ids_to_tokens(encoded_input['input_ids'])
     print("input_tokens", input_tokens, sep='\n', end="\n\n")
+
 
 def debug_gpt2():
     text = "Replace me by any text you'd like."
@@ -31,6 +54,8 @@ def debug_gpt2():
 
 
 if __name__ == "__main__":
+    debug_bpe()
+    # debug_tokenize()
     # debug_tokenizer()
-    debug_gpt2()
+    # debug_gpt2()
     ...
