@@ -55,8 +55,8 @@ def debug_gpt2():
 
 
 if __name__ == "__main__":
-    debug_bpe()
+    # debug_bpe()
     # debug_tokenize()
     # debug_tokenizer()
-    # debug_gpt2()
+    debug_gpt2()
     ...
