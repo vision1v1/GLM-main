@@ -1,6 +1,7 @@
 import os
 import torch
 from tokenization_gpt2 import GPT2Tokenizer
+from configuration_gpt2 import GPT2Config
 from modeling_gpt2 import GPT2Model
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions
 
@@ -43,6 +44,14 @@ def debug_tokenizer():
     print("input_tokens", input_tokens, sep='\n', end="\n\n")
 
 
+def debug_config():
+    """
+    调试一下config
+    """
+    config = GPT2Config.from_pretrained(gpt2_path)
+    print(config)
+
+
 def debug_gpt2():
     text = "Replace me by any text you'd like."
     tokenizer = GPT2Tokenizer.from_pretrained(gpt2_path)
@@ -51,12 +60,13 @@ def debug_gpt2():
     model:GPT2Model = GPT2Model.from_pretrained(gpt2_path)
     output:BaseModelOutputWithPastAndCrossAttentions = model.forward(**encoded_input)
 
-    print(output.__dict__.keys())
+    print(list(output.__dict__.keys()))
 
 
 if __name__ == "__main__":
     # debug_bpe()
     # debug_tokenize()
     # debug_tokenizer()
+    # debug_config()
     debug_gpt2()
     ...
