@@ -111,9 +111,7 @@ def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
                 num = int(scope_names[1])
                 pointer = pointer[num]
         try:
-            assert (
-                pointer.shape == array.shape
-            ), f"Pointer shape {pointer.shape} and array shape {array.shape} mismatched"
+            assert pointer.shape == array.shape, f"Pointer shape {pointer.shape} and array shape {array.shape} mismatched"
         except AssertionError as e:
             e.args += (pointer.shape, array.shape)
             raise
@@ -192,7 +190,7 @@ class GPT2Attention(nn.Module):
         if not self.is_cross_attention:
             # if only "normal" attention layer implements causal mask
             query_length, key_length = query.size(-2), key.size(-2)
-            causal_mask = self.bias[:, :, key_length - query_length: key_length, :key_length]
+            causal_mask = self.bias[:, :, key_length - query_length: key_length, :key_length] # [b, 1, seq_len, seq_len]
             mask_value = torch.finfo(attn_weights.dtype).min
             # Need to be a tensor, otherwise we get error: `RuntimeError: expected scalar type float but found double`.
             # Need to be on the same device, otherwise `RuntimeError: ..., x and y to be on the same device`
@@ -201,16 +199,16 @@ class GPT2Attention(nn.Module):
 
         if attention_mask is not None:
             # Apply the attention mask
-            attn_weights = attn_weights + attention_mask
+            attn_weights = attn_weights + attention_mask # TODO 上面已经 causal_mask了，这里在加上一个 attention_mask 是为了自定义扩展吗？
 
         attn_weights = nn.functional.softmax(attn_weights, dim=-1)
 
         # Downcast (if necessary) back to V's dtype (if in mixed-precision) -- No-Op otherwise
         attn_weights = attn_weights.type(value.dtype)
-        attn_weights = self.attn_dropout(attn_weights)
+        attn_weights = self.attn_dropout.forward(attn_weights)
 
         # Mask heads if we want to
-        if head_mask is not None:
+        if head_mask is not None: # TODO 头掩码？
             attn_weights = attn_weights * head_mask
 
         attn_output = torch.matmul(attn_weights, value)
@@ -273,7 +271,7 @@ class GPT2Attention(nn.Module):
         """
         Splits hidden_size dim into attn_head_size and num_heads
         """
-        new_shape = tensor.size()[:-1] + (num_heads, attn_head_size)
+        new_shape = tensor.size()[:-1] + (num_heads, attn_head_size) # [batch, seq_length, num_heads, head_features]
         tensor = tensor.view(new_shape)
         return tensor.permute(0, 2, 1, 3)  # (batch, head, seq_length, head_features)
 
@@ -308,7 +306,7 @@ class GPT2Attention(nn.Module):
         else:
             query, key, value = self.c_attn(hidden_states).split(self.split_size, dim=2)
 
-        query = self._split_heads(query, self.num_heads, self.head_dim)
+        query = self._split_heads(query, self.num_heads, self.head_dim) # [b, h, seq_len, h_dim] = [1, 12, 10, 64]
         key = self._split_heads(key, self.num_heads, self.head_dim)
         value = self._split_heads(value, self.num_heads, self.head_dim)
 
@@ -328,10 +326,10 @@ class GPT2Attention(nn.Module):
             attn_output, attn_weights = self._attn(query, key, value, attention_mask, head_mask)
 
         attn_output = self._merge_heads(attn_output, self.num_heads, self.head_dim)
-        attn_output = self.c_proj(attn_output)
-        attn_output = self.resid_dropout(attn_output)
+        attn_output = self.c_proj.forward(attn_output)
+        attn_output = self.resid_dropout.forward(attn_output)
 
-        outputs = (attn_output, present)
+        outputs = (attn_output, present) # 其中 present 用于记录 key，value
         if output_attentions:
             outputs += (attn_weights,)
 
@@ -381,13 +379,13 @@ class GPT2Block(nn.Module):
                 use_cache: Optional[bool] = False,
                 output_attentions: Optional[bool] = False) -> Union[Tuple[torch.Tensor], Optional[Tuple[torch.Tensor, Tuple[torch.FloatTensor, ...]]]]:
         residual = hidden_states
-        hidden_states = self.ln_1(hidden_states)
-        attn_outputs = self.attn(hidden_states,
-                                 layer_past=layer_past,
-                                 attention_mask=attention_mask,
-                                 head_mask=head_mask,
-                                 use_cache=use_cache,
-                                 output_attentions=output_attentions)
+        hidden_states = self.ln_1.forward(hidden_states)
+        attn_outputs = self.attn.forward(hidden_states,
+                                         layer_past=layer_past,
+                                         attention_mask=attention_mask,
+                                         head_mask=head_mask,
+                                         use_cache=use_cache,
+                                         output_attentions=output_attentions)
         attn_output = attn_outputs[0]  # output_attn: a, present, (attentions)
         outputs = attn_outputs[1:]
         # residual connection
@@ -401,21 +399,21 @@ class GPT2Block(nn.Module):
                     "cross-attention layers by setting `config.add_cross_attention=True`"
                 )
             residual = hidden_states
-            hidden_states = self.ln_cross_attn(hidden_states)
-            cross_attn_outputs = self.crossattention(hidden_states,
-                                                     attention_mask=attention_mask,
-                                                     head_mask=head_mask,
-                                                     encoder_hidden_states=encoder_hidden_states,
-                                                     encoder_attention_mask=encoder_attention_mask,
-                                                     output_attentions=output_attentions)
+            hidden_states = self.ln_cross_attn.forward(hidden_states)
+            cross_attn_outputs = self.crossattention.forward(hidden_states,
+                                                             attention_mask=attention_mask,
+                                                             head_mask=head_mask,
+                                                             encoder_hidden_states=encoder_hidden_states,
+                                                             encoder_attention_mask=encoder_attention_mask,
+                                                             output_attentions=output_attentions)
             attn_output = cross_attn_outputs[0]
             # residual connection
             hidden_states = residual + attn_output
             outputs = outputs + cross_attn_outputs[2:]  # add cross attentions if we output attention weights
 
         residual = hidden_states
-        hidden_states = self.ln_2(hidden_states)
-        feed_forward_hidden_states = self.mlp(hidden_states)
+        hidden_states = self.ln_2.forward(hidden_states)
+        feed_forward_hidden_states = self.mlp.forward(hidden_states)
         # residual connection
         hidden_states = residual + feed_forward_hidden_states
 
@@ -429,8 +427,7 @@ class GPT2Block(nn.Module):
 
 class GPT2PreTrainedModel(PreTrainedModel):
     """
-    An abstract class to handle weights initialization and a simple interface for downloading and loading pretrained
-    models.
+    An abstract class to handle weights initialization and a simple interface for downloading and loading pretrained models.
     """
 
     config_class = GPT2Config
@@ -827,15 +824,15 @@ class GPT2Model(GPT2PreTrainedModel):
         head_mask = self.get_head_mask(head_mask, self.config.n_layer)
 
         if inputs_embeds is None:
-            inputs_embeds = self.wte(input_ids)
-        position_embeds = self.wpe(position_ids)
+            inputs_embeds = self.wte.forward(input_ids)
+        position_embeds = self.wpe.forward(position_ids)
         hidden_states = inputs_embeds + position_embeds
 
         if token_type_ids is not None:
-            token_type_embeds = self.wte(token_type_ids)
+            token_type_embeds = self.wte.forward(token_type_ids)
             hidden_states = hidden_states + token_type_embeds
 
-        hidden_states = self.drop(hidden_states)
+        hidden_states = self.drop.forward(hidden_states)
 
         output_shape = input_shape + (hidden_states.size(-1),)
 
@@ -880,18 +877,18 @@ class GPT2Model(GPT2PreTrainedModel):
                                                             encoder_hidden_states,
                                                             encoder_attention_mask)
             else:
-                outputs = block(hidden_states,
-                                layer_past=layer_past,
-                                attention_mask=attention_mask,
-                                head_mask=head_mask[i],
-                                encoder_hidden_states=encoder_hidden_states,
-                                encoder_attention_mask=encoder_attention_mask,
-                                use_cache=use_cache,
-                                output_attentions=output_attentions)
+                outputs = block.forward(hidden_states,
+                                        layer_past=layer_past,
+                                        attention_mask=attention_mask,
+                                        head_mask=head_mask[i],
+                                        encoder_hidden_states=encoder_hidden_states,
+                                        encoder_attention_mask=encoder_attention_mask,
+                                        use_cache=use_cache,
+                                        output_attentions=output_attentions)
 
             hidden_states = outputs[0]
             if use_cache is True:
-                presents = presents + (outputs[1],)
+                presents = presents + (outputs[1],) # 收集了 每层的 key, value
 
             if output_attentions:
                 all_self_attentions = all_self_attentions + (outputs[2 if use_cache else 1],)
@@ -904,7 +901,7 @@ class GPT2Model(GPT2PreTrainedModel):
                     if i == v[-1] and "cuda:" + str(k) != self.last_device:
                         hidden_states = hidden_states.to("cuda:" + str(k + 1))
 
-        hidden_states = self.ln_f(hidden_states)
+        hidden_states = self.ln_f.forward(hidden_states)
 
         hidden_states = hidden_states.view(output_shape)
         # Add last hidden state
