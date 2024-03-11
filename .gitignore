@@ -7,3 +7,4 @@ runs
 settings.json
 .gitignore
 samples
+__pycache__
