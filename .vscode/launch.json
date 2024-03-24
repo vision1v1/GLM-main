@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "pretrain_glm.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:GLM-main}/pretrain_glm.py",
+            "env": {"skip_on_failure":"True"}
+        },
+        {
+            "name": "finetune_glm.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:GLM-main}/finetune_glm.py"
+        },
+        
+        {
+            "name": "pretrain_glm.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:GLM-main}/pretrain_glm.py",
+            "env": {"skip_on_failure":"True"}
+        },
+        
+    ]
+}
