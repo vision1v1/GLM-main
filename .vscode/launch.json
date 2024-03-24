@@ -4,23 +4,29 @@
             "name": "pretrain_glm.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder:GLM-main}/pretrain_glm.py",
-            "env": {"skip_on_failure":"True"}
+            "program": "${workspaceFolder}/pretrain_glm.py",
+            "env": {"skip_on_failure":"True"},
+            "args": [
+                "--data-dir", "./debug_data",
+                "--train-data", "train.txt",
+                "--valid-data", "valid.txt",
+                "--test-data", "test.txt"
+            ]
         },
         {
             "name": "finetune_glm.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder:GLM-main}/finetune_glm.py"
+            "program": "${workspaceFolder}/finetune_glm.py"
         },
-        
         {
-            "name": "pretrain_glm.py",
+            "name": "generate_samples.py",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder:GLM-main}/pretrain_glm.py",
+            "program": "${workspaceFolder}/generate_samples.py",
             "env": {"skip_on_failure":"True"}
         },
+        
         
     ]
 }
